@@ -1,0 +1,5 @@
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
