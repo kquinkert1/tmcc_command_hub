@@ -11,6 +11,15 @@ class CommandType(Enum):
     SWITCH = "Switch"
     ROUTE = "Route"
     ACCESSORY = "Accessory"
+    SYSTEM = "System"
+
+
+class SystemAction(Enum):
+    """
+    System-level commands not associated with a specific asset.
+    """
+    HALT = "Halt"
+    UNKNOWN = "Unknown"
 
 
 class EngineAction(Enum):

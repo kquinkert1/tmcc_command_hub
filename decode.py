@@ -9,7 +9,7 @@ Usage: python decode.py ABCD
 """
 import sys
 import csv
-from tmcc.tmcc_command_factory import TMCCCommandFactory
+from factory.tmcc_command_factory import TMCCCommandFactory
 
 CSV_FIELDS = ['command_type', 'address', 'command_field', 'data_field', 'action', 'speed_value', 'raw_word']
 csv_writer = None

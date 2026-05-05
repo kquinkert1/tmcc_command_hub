@@ -1,5 +1,5 @@
 import unittest
-from tmcc.tmcc_command_factory import TMCCCommandFactory, DecodedCommand
+from factory.tmcc_command_factory import TMCCCommandFactory, DecodedCommand
 from tmcc.tmcc_enums import CommandType, EngineAction
 
 
