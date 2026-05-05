@@ -4,7 +4,8 @@ from tmcc.tmcc_enums import (
     TrainAction,
     SwitchAction,
     RouteAction,
-    AccessoryAction
+    AccessoryAction,
+    SystemAction
 )
 
 
@@ -26,6 +27,9 @@ class TMCCCommandFactory:
         01 = Switch or Route command
         10 = Accessory command
         11 = Train command
+
+    Special packets:
+        0xFFFF = System HALT command
     """
 
     # Command type identifiers from bits 15-14
@@ -33,6 +37,9 @@ class TMCCCommandFactory:
     SWITCH_BITS = 0b01
     ACCESSORY_BITS = 0b10
     TRAIN_BITS = 0b11
+
+    # Special system command words
+    HALT_WORD = 0xFFFF
 
     # Engine action lookup table: (command_field, data_field) -> EngineAction
     ENGINE_ACTION_MAP = {
@@ -143,6 +150,10 @@ class TMCCCommandFactory:
         # Reconstruct 16-bit word from bytes 2 and 3
         word = (packet[1] << 8) | packet[2]
 
+        # Check for system commands first
+        if word == cls.HALT_WORD:
+            return cls._decode_halt(word)
+
         # Extract bits 15-14 to determine command type
         cmd_type_bits = (word >> 14) & 0b11
 
@@ -156,6 +167,20 @@ class TMCCCommandFactory:
             return cls._decode_train(word)
         else:
             raise ValueError(f"Unknown command type bits: {bin(cmd_type_bits)}")
+
+    @classmethod
+    def _decode_halt(cls, word):
+        """Decode the system HALT command (0xFFFF)."""
+        return DecodedCommand(
+            command_type=CommandType.SYSTEM,
+            address=0,
+            command_field=0,
+            data_field=0,
+            action=SystemAction.HALT,
+            speed_value=None,
+            description="System: Halt",
+            raw_word=word
+        )
 
     @classmethod
     def _decode_engine(cls, word):
@@ -178,7 +203,6 @@ class TMCCCommandFactory:
         command_field = (word >> 5) & 0x03
         data_field = word & 0x1F
 
-        # Handle speed commands separately as they carry dynamic values
         if command_field == 0b10:
             action = EngineAction.RELATIVE_SPEED
             speed_value = data_field - 5
@@ -314,7 +338,6 @@ class TMCCCommandFactory:
         command_field = (word >> 5) & 0x03
         data_field = word & 0x1F
 
-        # Handle speed commands separately as they carry dynamic values
         if command_field == 0b10:
             action = TrainAction.RELATIVE_SPEED
             speed_value = data_field - 5
@@ -380,19 +403,6 @@ class DecodedCommand:
 
     def __init__(self, command_type, address, command_field,
                  data_field, action, speed_value, description, raw_word):
-        """
-        Initialize a DecodedCommand object.
-
-        Args:
-            command_type (CommandType): Type of command enum value
-            address (int): ID number of the target device
-            command_field (int): 2-bit command field value
-            data_field (int): 5-bit data field value
-            action (Enum): Action enum value
-            speed_value (int or None): Speed value for speed commands, else None
-            description (str): Full human-readable command description
-            raw_word (int): Original 16-bit command word
-        """
         self.command_type = command_type
         self.address = address
         self.command_field = command_field
@@ -403,21 +413,9 @@ class DecodedCommand:
         self.raw_word = raw_word
 
     def __str__(self):
-        """
-        Return human-readable string representation of the command.
-
-        Returns:
-            str: Human-readable command description
-        """
         return self.description
 
     def __repr__(self):
-        """
-        Return detailed string representation of the command for debugging.
-
-        Returns:
-            str: Detailed command representation with all fields
-        """
         return (
             f"DecodedCommand("
             f"type={self.command_type.value}, "
