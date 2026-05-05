@@ -1,4 +1,4 @@
-from tmcc.tmcc_command import TMCC_Command
+from commands.tmcc_command import TMCC_Command
 
 
 class EngineCommand(TMCC_Command):
