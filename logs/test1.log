@@ -1,0 +1,203 @@
+# TMCC test command script
+# Format: 0xB1 0xB2  # comment
+
+ 0x0 0xc8  # E1 spd=3 dir=Forward bell=Off
+ 0x0 0xc8  # E1 spd=6 dir=Forward bell=Off
+ 0x0 0xc8  # E1 spd=9 dir=Forward bell=Off
+ 0x0 0xc8  # E1 spd=12 dir=Forward bell=Off
+ 0x1 0xc7  # E3 spd=2 dir=Forward bell=Off
+ 0x1 0xc7  # E3 spd=4 dir=Forward bell=Off
+ 0x1 0xc7  # E3 spd=6 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=1 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=2 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=3 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=4 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=5 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=6 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=7 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=8 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=9 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=10 dir=Forward bell=Off
+ 0x2 0x1c  # E4 spd=0 dir=Forward bell=Off [horn]
+ 0x2 0x1c  # E4 spd=0 dir=Forward bell=Off [horn]
+ 0x2 0x1c  # E4 spd=0 dir=Forward bell=Off [horn]
+ 0x2 0x1c  # E4 spd=0 dir=Forward bell=Off [horn]
+ 0x2 0x1c  # E4 spd=0 dir=Forward bell=Off [horn]
+ 0x2 0x1c  # E4 spd=0 dir=Forward bell=Off [horn]
+ 0x2 0x1c  # E4 spd=0 dir=Forward bell=Off [horn]
+ 0x2 0x1c  # E4 spd=0 dir=Forward bell=Off [horn]
+ 0x2 0x1c  # E4 spd=0 dir=Forward bell=Off [horn]
+ 0x2 0x1c  # E4 spd=0 dir=Forward bell=Off [horn]
+ 0x0 0xc3  # E1 spd=10 dir=Forward bell=Off
+ 0x0 0xc3  # E1 spd=8 dir=Forward bell=Off
+ 0x0 0xc3  # E1 spd=6 dir=Forward bell=Off
+ 0x0 0xc3  # E1 spd=4 dir=Forward bell=Off
+ 0x0 0x9d  # E1 spd=4 dir=Forward bell=On
+ 0x0 0xc3  # E1 spd=2 dir=Forward bell=On
+ 0x1 0x48  # E2 spd=13 dir=Forward bell=Off
+ 0x1 0x48  # E2 spd=16 dir=Forward bell=Off
+ 0x1 0x48  # E2 spd=19 dir=Forward bell=Off
+ 0x1 0xc6  # E3 spd=7 dir=Forward bell=Off
+ 0x1 0xc6  # E3 spd=8 dir=Forward bell=Off
+ 0x1 0xc6  # E3 spd=9 dir=Forward bell=Off
+ 0x1 0xc6  # E3 spd=10 dir=Forward bell=Off
+ 0x2 0x48  # E4 spd=3 dir=Forward bell=Off
+ 0x2 0x48  # E4 spd=6 dir=Forward bell=Off
+ 0x1 0x9c  # E3 spd=10 dir=Forward bell=Off [horn]
+ 0x2 0x48  # E4 spd=9 dir=Forward bell=Off
+ 0x2 0x48  # E4 spd=12 dir=Forward bell=Off
+ 0x2 0x48  # E4 spd=15 dir=Forward bell=Off
+ 0x1 0x1c  # E2 spd=19 dir=Forward bell=Off [horn]
+ 0x1 0x43  # E2 spd=17 dir=Forward bell=Off
+ 0x1 0x43  # E2 spd=15 dir=Forward bell=Off
+ 0x1 0x43  # E2 spd=13 dir=Forward bell=Off
+ 0x0 0xc8  # E1 spd=5 dir=Forward bell=On
+ 0x0 0xc8  # E1 spd=8 dir=Forward bell=On
+ 0x0 0xc8  # E1 spd=11 dir=Forward bell=On
+ 0x0 0xc8  # E1 spd=14 dir=Forward bell=On
+ 0x0 0xc8  # E1 spd=17 dir=Forward bell=On
+ 0x1 0x43  # E2 spd=11 dir=Forward bell=Off
+ 0x1 0x43  # E2 spd=9 dir=Forward bell=Off
+ 0x1 0x9c  # E3 spd=10 dir=Forward bell=Off [horn]
+ 0x1 0x43  # E2 spd=7 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=14 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=13 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=12 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=11 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=10 dir=Forward bell=Off
+ 0x0 0xc3  # E1 spd=15 dir=Forward bell=On
+ 0x0 0xc3  # E1 spd=13 dir=Forward bell=On
+ 0x0 0xc3  # E1 spd=11 dir=Forward bell=On
+ 0x1 0xc8  # E3 spd=13 dir=Forward bell=Off
+ 0x1 0x9d  # E3 spd=13 dir=Forward bell=On
+ 0x1 0xc8  # E3 spd=16 dir=Forward bell=On
+ 0x1 0xc8  # E3 spd=19 dir=Forward bell=On
+ 0x1 0xc8  # E3 spd=22 dir=Forward bell=On
+ 0x2 0x43  # E4 spd=8 dir=Forward bell=Off
+ 0x2 0x43  # E4 spd=6 dir=Forward bell=Off
+ 0x2 0x43  # E4 spd=4 dir=Forward bell=Off
+ 0x1 0xc8  # E3 spd=25 dir=Forward bell=On
+ 0x1 0xc8  # E3 spd=28 dir=Forward bell=On
+ 0x1 0xc8  # E3 spd=31 dir=Forward bell=On
+ 0x1 0xc8  # E3 spd=31 dir=Forward bell=On
+ 0x1 0x9c  # E3 spd=31 dir=Forward bell=On [horn]
+ 0x1 0xc8  # E3 spd=31 dir=Forward bell=On
+ 0x1 0x43  # E2 spd=5 dir=Forward bell=Off
+ 0x1 0x43  # E2 spd=3 dir=Forward bell=Off
+ 0x2 0x1c  # E4 spd=4 dir=Forward bell=Off [horn]
+ 0x1 0x43  # E2 spd=1 dir=Forward bell=Off
+ 0x1 0x43  # E2 spd=0 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=1 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=2 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=3 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=4 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=5 dir=Forward bell=Off
+ 0x2 0x43  # E4 spd=2 dir=Forward bell=Off
+ 0x2 0x43  # E4 spd=0 dir=Forward bell=Off
+ 0x1 0x1c  # E2 spd=5 dir=Forward bell=Off [horn]
+ 0x2 0x43  # E4 spd=0 dir=Forward bell=Off
+ 0x0 0x9c  # E1 spd=11 dir=Forward bell=On [horn]
+ 0x2 0x43  # E4 spd=0 dir=Forward bell=Off
+ 0x2 0x43  # E4 spd=0 dir=Forward bell=Off
+ 0x1 0x1c  # E2 spd=5 dir=Forward bell=Off [horn]
+ 0x1 0x48  # E2 spd=8 dir=Forward bell=Off
+ 0x1 0x48  # E2 spd=11 dir=Forward bell=Off
+ 0x1 0x48  # E2 spd=14 dir=Forward bell=Off
+ 0x1 0x48  # E2 spd=17 dir=Forward bell=Off
+ 0x1 0xc7  # E3 spd=31 dir=Forward bell=On
+ 0x1 0xc7  # E3 spd=31 dir=Forward bell=On
+ 0x0 0x9c  # E1 spd=11 dir=Forward bell=On [horn]
+ 0x1 0xc7  # E3 spd=31 dir=Forward bell=On
+ 0x1 0xc7  # E3 spd=31 dir=Forward bell=On
+ 0x2 0x44  # E4 spd=0 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=0 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=0 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=0 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=0 dir=Forward bell=Off
+ 0x1 0x44  # E2 spd=16 dir=Forward bell=Off
+ 0x1 0x44  # E2 spd=15 dir=Forward bell=Off
+ 0x1 0x44  # E2 spd=14 dir=Forward bell=Off
+ 0x1 0x1d  # E2 spd=14 dir=Forward bell=On
+ 0x2 0x46  # E4 spd=1 dir=Forward bell=Off
+ 0x2 0x46  # E4 spd=2 dir=Forward bell=Off
+ 0x2 0x46  # E4 spd=3 dir=Forward bell=Off
+ 0x2 0x46  # E4 spd=4 dir=Forward bell=Off
+ 0x0 0xc6  # E1 spd=12 dir=Forward bell=On
+ 0x2 0x1c  # E4 spd=4 dir=Forward bell=Off [horn]
+ 0x0 0xc6  # E1 spd=13 dir=Forward bell=On
+ 0x0 0xc6  # E1 spd=14 dir=Forward bell=On
+ 0x0 0xc6  # E1 spd=15 dir=Forward bell=On
+ 0x0 0xc6  # E1 spd=16 dir=Forward bell=On
+ 0x1 0x48  # E2 spd=17 dir=Forward bell=On
+ 0x1 0x48  # E2 spd=20 dir=Forward bell=On
+ 0x1 0x48  # E2 spd=23 dir=Forward bell=On
+ 0x1 0xc4  # E3 spd=30 dir=Forward bell=On
+ 0x1 0xc4  # E3 spd=29 dir=Forward bell=On
+ 0x1 0xc4  # E3 spd=28 dir=Forward bell=On
+ 0x2 0x48  # E4 spd=7 dir=Forward bell=Off
+ 0x2 0x48  # E4 spd=10 dir=Forward bell=Off
+ 0x1 0x1c  # E2 spd=23 dir=Forward bell=On [horn]
+ 0x2 0x48  # E4 spd=13 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=24 dir=Forward bell=On
+ 0x1 0x46  # E2 spd=25 dir=Forward bell=On
+ 0x1 0x46  # E2 spd=26 dir=Forward bell=On
+ 0x0 0xc8  # E1 spd=19 dir=Forward bell=On
+ 0x0 0xc8  # E1 spd=22 dir=Forward bell=On
+ 0x0 0xc8  # E1 spd=25 dir=Forward bell=On
+ 0x0 0xc8  # E1 spd=28 dir=Forward bell=On
+ 0x0 0xc8  # E1 spd=31 dir=Forward bell=On
+ 0x1 0xc8  # E3 spd=31 dir=Forward bell=On
+ 0x1 0xc8  # E3 spd=31 dir=Forward bell=On
+ 0x1 0xc8  # E3 spd=31 dir=Forward bell=On
+ 0x1 0xc4  # E3 spd=30 dir=Forward bell=On
+ 0x1 0xc4  # E3 spd=29 dir=Forward bell=On
+ 0x1 0xc4  # E3 spd=28 dir=Forward bell=On
+ 0x0 0x9d  # E1 spd=31 dir=Forward bell=Off
+ 0x1 0x48  # E2 spd=29 dir=Forward bell=On
+ 0x1 0x9c  # E3 spd=28 dir=Forward bell=On [horn]
+ 0x1 0x48  # E2 spd=31 dir=Forward bell=On
+ 0x1 0x48  # E2 spd=31 dir=Forward bell=On
+ 0x1 0x48  # E2 spd=31 dir=Forward bell=On
+ 0x1 0x48  # E2 spd=31 dir=Forward bell=On
+ 0x0 0xc6  # E1 spd=31 dir=Forward bell=Off
+ 0x0 0xc6  # E1 spd=31 dir=Forward bell=Off
+ 0x0 0xc6  # E1 spd=31 dir=Forward bell=Off
+ 0x1 0x47  # E2 spd=31 dir=Forward bell=On
+ 0x1 0x9c  # E3 spd=28 dir=Forward bell=On [horn]
+ 0x1 0x47  # E2 spd=31 dir=Forward bell=On
+ 0x1 0x47  # E2 spd=31 dir=Forward bell=On
+ 0x0 0xc7  # E1 spd=31 dir=Forward bell=Off
+ 0x0 0xc7  # E1 spd=31 dir=Forward bell=Off
+ 0x0 0xc7  # E1 spd=31 dir=Forward bell=Off
+ 0x1 0x43  # E2 spd=29 dir=Forward bell=On
+ 0x1 0x43  # E2 spd=27 dir=Forward bell=On
+ 0x1 0x43  # E2 spd=25 dir=Forward bell=On
+ 0x2 0x48  # E4 spd=16 dir=Forward bell=Off
+ 0x1 0x1d  # E2 spd=25 dir=Forward bell=Off
+ 0x2 0x48  # E4 spd=19 dir=Forward bell=Off
+ 0x2 0x48  # E4 spd=22 dir=Forward bell=Off
+ 0x2 0x48  # E4 spd=25 dir=Forward bell=Off
+ 0x2 0x48  # E4 spd=28 dir=Forward bell=Off
+ 0x0 0xc7  # E1 spd=31 dir=Forward bell=Off
+ 0x0 0xc7  # E1 spd=31 dir=Forward bell=Off
+ 0x2 0x1c  # E4 spd=28 dir=Forward bell=Off [horn]
+ 0x1 0x9d  # E3 spd=28 dir=Forward bell=Off
+ 0x0 0xc7  # E1 spd=31 dir=Forward bell=Off
+ 0x0 0xc7  # E1 spd=31 dir=Forward bell=Off
+ 0x0 0xc7  # E1 spd=31 dir=Forward bell=Off
+ 0x1 0xc3  # E3 spd=26 dir=Forward bell=Off
+ 0x1 0xc3  # E3 spd=24 dir=Forward bell=Off
+ 0x1 0xc3  # E3 spd=22 dir=Forward bell=Off
+ 0x1 0xc3  # E3 spd=20 dir=Forward bell=Off
+ 0x1 0x48  # E2 spd=28 dir=Forward bell=Off
+ 0x1 0x48  # E2 spd=31 dir=Forward bell=Off
+ 0x1 0x48  # E2 spd=31 dir=Forward bell=Off
+ 0x1 0x48  # E2 spd=31 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=27 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=26 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=25 dir=Forward bell=Off
+ 0x2 0x44  # E4 spd=24 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=31 dir=Forward bell=Off
+ 0x1 0x46  # E2 spd=31 dir=Forward bell=Off
+ 0x1 0x1c  # E2 spd=31 dir=Forward bell=Off [horn]
+ 0x1 0x46  # E2 spd=31 dir=Forward bell=Off
