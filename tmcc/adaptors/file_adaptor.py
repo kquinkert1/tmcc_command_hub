@@ -1,7 +1,8 @@
+import configparser
 import logging
 import os
-
-from adaptors.adaptor import Adaptor
+import argparse
+from tmcc.adaptors.adaptor import Adaptor
 
 log = logging.getLogger(__name__)
 
@@ -12,23 +13,27 @@ class FileAdaptor(Adaptor):
     send() is a no-op.
     """
 
-    CONFIG_FILE = '../../tmcc.ini'
+    CONFIG_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'tmcc.ini')
     CONFIG_SECTION = 'FileAdaptor'
     CONFIG_KEY = 'filename'
 
     def __init__(self, filename: str = None):
         self._filename = filename or self._load_filename()
         self._file = None
+
+    @property
+    def filename(self) -> str:
+        return self._filename
+
     def _load_filename(self) -> str:
-        import configparser
         config = configparser.ConfigParser()
         abs_config = os.path.abspath(self.CONFIG_FILE)
-
-        config.read(self.CONFIG_FILE)
-        log.debug( f"Config file: {self.CONFIG_FILE}, section: [{self.CONFIG_SECTION}], key: {self.CONFIG_KEY}")
+        config.read(abs_config)
         filename = config[self.CONFIG_SECTION][self.CONFIG_KEY]
-        abs_file = os.path.abspath(filename)
+        abs_filename = os.path.abspath(filename)
+        log.debug(f"Config file: {abs_config}, section: [{self.CONFIG_SECTION}], key: {self.CONFIG_KEY} = {abs_filename}")
         return filename
+
     def start(self):
         self._file = open(self._filename)
 
@@ -37,11 +42,13 @@ class FileAdaptor(Adaptor):
             self._file.close()
             self._file = None
 
-    def read(self) -> bytes:
-        """Read next valid line and return as a 3-byte packet."""
+    def read(self) -> tuple:
+        """Read next valid line and return (packet, comment) tuple."""
         for line in self._file:
-            line = line.strip()
-            if not line or line.startswith('#'):
+            parts = line.split('#', 1)
+            comment = parts[1].strip() if len(parts) > 1 else ''
+            line = parts[0].strip()
+            if not line:
                 continue
             tokens = line.split()
             try:
@@ -54,10 +61,11 @@ class FileAdaptor(Adaptor):
                     b2 = int(cleaned[2:4], 16)
                 else:
                     continue
-                return bytes([0xFE, b1, b2])
+                log.debug(comment)
+                return bytes([0xFE, b1, b2]), comment
             except ValueError:
                 continue
-        return None  # EOF
+        return None, ''  # EOF
 
     def send(self, packet: bytes):
         """No-op for file-based adaptor."""
@@ -65,7 +73,7 @@ class FileAdaptor(Adaptor):
 
 
 if __name__ == '__main__':
-    import argparse
+    logging.basicConfig(level=logging.DEBUG)
 
     parser = argparse.ArgumentParser(description='Read TMCC packets from a file.')
     parser.add_argument('-f', '--filename', help='File to read from')
@@ -73,12 +81,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     adaptor = FileAdaptor(filename=args.filename)
-    print(f"Reading from: {adaptor._filename}")
+    print(f"Reading from: {os.path.abspath(adaptor.filename)}")
 
     with adaptor:
         while True:
-            packet = adaptor.read()
+            packet, comment = adaptor.read()
             if packet is None:
                 break
             if args.verbose:
-                print(f"  {packet.hex()}")
+                print(f"  {packet.hex()}  {comment}")
