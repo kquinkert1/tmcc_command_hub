@@ -21,6 +21,10 @@ class SpeedMonitor(Monitor):
         self._engines = {}  # address -> payload dict
         self._dirty = False
 
+    @property
+    def engines(self) -> dict:
+        return self._engines
+
     def monitor_subscriptions(self):
         self._subscriptions.connect()
         self._subscriptions.subscribe('tmcc/engine/#', self._on_engine_update)

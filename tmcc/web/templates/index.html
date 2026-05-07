@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMCC Command Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Oswald:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0c0f;
+            --panel: #111318;
+            --border: #1e2530;
+            --accent: #e8a020;
+            --accent2: #3a8fc7;
+            --text: #c8d0dc;
+            --text-dim: #4a5568;
+            --green: #2ecc71;
+            --red: #e74c3c;
+            --mono: 'Share Tech Mono', monospace;
+            --head: 'Oswald', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--mono);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* scanline effect */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.03) 2px,
+                rgba(0,0,0,0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel);
+        }
+
+        .logo {
+            font-family: var(--head);
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .logo span {
+            color: var(--text-dim);
+            font-weight: 300;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            margin-left: auto;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background: var(--red);
+            box-shadow: 0 0 8px var(--red);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .status-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            padding: 0 32px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel);
+        }
+
+        .tab {
+            padding: 14px 24px;
+            font-family: var(--head);
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover { color: var(--text); }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* Content */
+        .content {
+            padding: 32px;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Engine Table */
+        .panel-header {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .panel-title {
+            font-family: var(--head);
+            font-size: 18px;
+            font-weight: 400;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .update-time {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead tr {
+            border-bottom: 1px solid var(--accent);
+        }
+
+        th {
+            font-family: var(--head);
+            font-weight: 400;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            padding: 10px 16px;
+            text-align: left;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+        td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+
+        .engine-id {
+            font-family: var(--head);
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+
+        .speed-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speed-val {
+            width: 28px;
+            text-align: right;
+            color: var(--accent2);
+        }
+
+        .speed-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            max-width: 120px;
+        }
+
+        .speed-fill {
+            height: 100%;
+            background: var(--accent2);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 6px var(--accent2);
+        }
+
+        .dir-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            border-radius: 2px;
+            font-family: var(--head);
+        }
+
+        .dir-forward {
+            background: rgba(46,204,113,0.15);
+            color: var(--green);
+            border: 1px solid rgba(46,204,113,0.3);
+        }
+
+        .dir-reverse {
+            background: rgba(231,76,60,0.15);
+            color: var(--red);
+            border: 1px solid rgba(231,76,60,0.3);
+        }
+
+        .bell-on {
+            color: var(--accent);
+            text-shadow: 0 0 8px var(--accent);
+        }
+
+        .bell-off { color: var(--text-dim); }
+
+        .last-cmd {
+            color: var(--text);
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .comment {
+            color: var(--text-dim);
+            font-size: 11px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ts { color: var(--text-dim); font-size: 11px; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-dim);
+            font-size: 13px;
+            letter-spacing: 2px;
+        }
+
+        .empty-state::before {
+            content: '[ NO ENGINES DETECTED ]';
+            display: block;
+            font-family: var(--head);
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--border);
+        }
+
+        /* Flash on update */
+        @keyframes flash {
+            0% { background: rgba(232,160,32,0.08); }
+            100% { background: transparent; }
+        }
+
+        tr.updated { animation: flash 0.6s ease-out; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">TMCC <span>Command Hub</span></div>
+    <div class="status-label" id="status-label">CONNECTING</div>
+    <div class="status-dot disconnected" id="status-dot"></div>
+</header>
+
+<nav class="tabs">
+    <div class="tab active" data-tab="speed">Speed Monitor</div>
+</nav>
+
+<div class="content">
+    <div class="tab-panel active" id="tab-speed">
+        <div class="panel-header">
+            <div class="panel-title">Engine Status</div>
+            <div class="update-time" id="update-time"></div>
+        </div>
+        <div id="engine-table-wrap">
+            <div class="empty-state" id="empty-state">Waiting for engine data...</div>
+            <table id="engine-table" style="display:none">
+                <thead>
+                    <tr>
+                        <th>Engine</th>
+                        <th>Speed</th>
+                        <th>Direction</th>
+                        <th>Bell</th>
+                        <th>Last Command</th>
+                        <th>Comment</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="engine-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // SSE
+    const dot = document.getElementById('status-dot');
+    const statusLabel = document.getElementById('status-label');
+    const tbody = document.getElementById('engine-tbody');
+    const table = document.getElementById('engine-table');
+    const emptyState = document.getElementById('empty-state');
+    const updateTime = document.getElementById('update-time');
+
+    function setConnected(ok) {
+        dot.className = 'status-dot' + (ok ? '' : ' disconnected');
+        statusLabel.textContent = ok ? 'LIVE' : 'DISCONNECTED';
+    }
+
+    const engines = {};
+
+    function renderEngines() {
+        const ids = Object.keys(engines).sort((a, b) => a - b);
+        if (ids.length === 0) {
+            table.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
+        }
+        table.style.display = 'table';
+        emptyState.style.display = 'none';
+
+        // Update or add rows
+        ids.forEach(id => {
+            const e = engines[id];
+            const pct = Math.round((e.speed / (e.max_speed || 31)) * 100);
+            const dirClass = e.direction === 'Forward' ? 'dir-forward' : 'dir-reverse';
+            const bellClass = e.bell ? 'bell-on' : 'bell-off';
+            const bellLabel = e.bell ? '🔔 ON' : 'OFF';
+
+            let row = document.getElementById('engine-row-' + id);
+            if (!row) {
+                row = document.createElement('tr');
+                row.id = 'engine-row-' + id;
+                tbody.appendChild(row);
+            }
+
+            row.innerHTML = `
+                <td><span class="engine-id">${id}</span></td>
+                <td>
+                    <div class="speed-bar-wrap">
+                        <span class="speed-val">${e.speed}</span>
+                        <div class="speed-bar">
+                            <div class="speed-fill" style="width:${pct}%"></div>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="dir-badge ${dirClass}">${e.direction}</span></td>
+                <td><span class="${bellClass}">${bellLabel}</span></td>
+                <td><span class="last-cmd">${e.last_command || ''}</span></td>
+                <td><span class="comment">${e.line_comment || ''}</span></td>
+                <td><span class="ts">${e.timestamp || ''}</span></td>
+            `;
+
+            row.classList.remove('updated');
+            void row.offsetWidth; // reflow
+            row.classList.add('updated');
+        });
+
+        updateTime.textContent = 'updated ' + new Date().toLocaleTimeString();
+    }
+
+    const evtSource = new EventSource('/stream');
+
+    evtSource.onopen = () => setConnected(true);
+    evtSource.onerror = () => setConnected(false);
+
+    evtSource.addEventListener('engine', e => {
+        const data = JSON.parse(e.data);
+        engines[data.id] = data;
+        renderEngines();
+    });
+</script>
+</body>
+</html
