@@ -5,11 +5,11 @@ import logging
 import argparse
 from datetime import datetime
 
-from dispatcher import Dispatcher
+from dispatchers import Dispatcher
+from models import Engine
 from tmcc.adaptors.file_adaptor import FileAdaptor
 from tmcc.factory.tmcc_command_factory import TMCCCommandFactory
 from tmcc.tmcc_subscriptions import TMCCSubscriptions
-from tmcc.models.engine import Engine
 from tmcc.tmcc_enums import CommandType
 
 log = logging.getLogger(__name__)
