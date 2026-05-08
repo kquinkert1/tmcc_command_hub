@@ -19,7 +19,7 @@ class Engine:
         self.direction = 'Forward'
         self.bell = False
         self.speed = 0
-        self.max_speed = 31
+        self.max_speed = 200
         self.last_command = None
         self.line_comment = ''
         self.timestamp = datetime.now()
