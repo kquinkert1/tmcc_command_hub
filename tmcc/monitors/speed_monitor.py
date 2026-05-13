@@ -33,6 +33,7 @@ class SpeedMonitor(Monitor):
         payload = json.loads(message.payload)
         self._engines[payload['id']] = payload
         self._dirty = True
+        # log.debug(f"{payload['message_timestamp']}  engine/{payload['id']}  spd={payload['speed']} dir={payload['direction']} bell={payload['bell']}")
 
     def _print_table(self):
         ts = datetime.now().strftime('%H:%M:%S')
@@ -40,12 +41,12 @@ class SpeedMonitor(Monitor):
         if not self._engines:
             print("  No engines seen yet.")
         else:
-            print(f"  {'Engine':>8}  {'Speed':>6}  {'Direction':<10}  {'Bell':<5}  {'Last Command':<30}  {'Time':<11}  {'Comment'}")
-            print(f"  {'-'*8}  {'-'*6}  {'-'*10}  {'-'*5}  {'-'*30}  {'-'*11}  {'-'*20}")
+            print(f"  {'Engine':>8}  {'Speed':>6}  {'Direction':<10}  {'Bell':<5}  {'Last Command':<30}  {'Cmd Time':<11}  {'Msg Time':<11}  {'Comment'}")
+            print(f"  {'-'*8}  {'-'*6}  {'-'*10}  {'-'*5}  {'-'*30}  {'-'*11}  {'-'*11}  {'-'*20}")
             for address in sorted(self._engines):
                 e = self._engines[address]
                 bell = 'On' if e['bell'] else 'Off'
-                print(f"  {address:>8}  {e['speed']:>6}  {e['direction']:<10}  {bell:<5}  {e['last_command']:<30}  {e['timestamp']}  {e.get('line_comment', '')}")
+                print(f"  {address:>8}  {e['speed']:>6}  {e['direction']:<10}  {bell:<5}  {e['last_command']:<30}  {e['command_timestamp']}  {e['message_timestamp']}  {e.get('line_comment', '')}")
         print()
         self._dirty = False
 

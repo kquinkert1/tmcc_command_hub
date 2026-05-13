@@ -37,10 +37,13 @@ class SerialDispatcher(Dispatcher):
         self._dirty = set()
 
     def _load_log_filename(self) -> str:
-        config = configparser.ConfigParser()
+        config = configparser.RawConfigParser()
         abs_config = os.path.abspath(CONFIG_FILE)
         config.read(abs_config)
         filename = config[CONFIG_SECTION][CONFIG_KEY]
+        if '{timestamp}' in filename:
+            ts = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            filename = filename.replace('{timestamp}', ts)
         abs_filename = os.path.abspath(filename)
         log.debug(f"Log file: {abs_filename}")
         return filename
@@ -77,7 +80,8 @@ class SerialDispatcher(Dispatcher):
             'bell': engine.bell,
             'last_command': engine.last_command or '',
             'line_comment': engine.line_comment,
-            'timestamp': engine.timestamp.strftime('%H:%M:%S.%f')[:11]
+            'command_timestamp': engine.command_timestamp.strftime('%H:%M:%S.%f')[:11],
+            'message_timestamp': datetime.now().strftime('%H:%M:%S.%f')[:11]
         }
         self._subscriptions.publish(topic, payload)
         if self._verbose:
@@ -127,7 +131,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Dispatch TMCC packets from serial port.')
     parser.add_argument('-p', '--port', help='Serial port (e.g. /dev/ttyS0)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+    parser.add_argument('--list-ports', action='store_true', help='List available serial ports and exit')
     args = parser.parse_args()
+
+    if args.list_ports:
+        import serial.tools.list_ports
+        ports = serial.tools.list_ports.comports()
+        if ports:
+            for p in ports:
+                print(f"{p.device}  {p.description}")
+        else:
+            print("No serial ports found.")
+        exit(0)
 
     dispatcher = SerialDispatcher(port=args.port, verbose=args.verbose)
     dispatcher.run()

@@ -1,7 +1,8 @@
 import serial
+from abc import ABC, abstractmethod
 
 
-class TMCC_Command:
+class TMCC_Command(ABC):
     """
     Base class for all Lionel TMCC (TrainMaster Command Control) commands.
 
@@ -49,11 +50,6 @@ class TMCC_Command:
         """
         Send a 3-byte TMCC command packet over the serial port.
 
-        The packet must be exactly 3 bytes:
-            - Byte 1: Header byte (0xFE)
-            - Byte 2: High byte of 16-bit command word
-            - Byte 3: Low byte of 16-bit command word
-
         Args:
             packet (bytes): A 3-byte TMCC command packet
 
@@ -65,7 +61,9 @@ class TMCC_Command:
             raise ValueError("TMCC packet must be exactly 3 bytes")
         self.port.write(packet)
 
-    def build_command(self, address, command_bits, data_bits):
+    @classmethod
+    @abstractmethod
+    def build_command(cls, address, command_bits, data_bits) -> bytes:
         """
         Build a 3-byte TMCC command packet from its component fields.
 
@@ -80,40 +78,20 @@ class TMCC_Command:
 
         Returns:
             bytes: 3-byte TMCC command packet
-
-        Raises:
-            NotImplementedError: If called directly on the base class
         """
-        raise NotImplementedError("Subclasses must implement build_command()")
+        pass
 
     def close(self):
         """
         Close the serial port connection.
 
         Safe to call even if the port is already closed.
-        Should be called when finished sending commands to
-        release the serial port resource.
         """
         if self.port.is_open:
             self.port.close()
 
     def __enter__(self):
-        """
-        Support use as a context manager.
-
-        Allows the pattern:
-            with TMCC_Command('/dev/ttyS0') as tmcc:
-                tmcc.send(packet)
-        """
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Automatically close the serial port when exiting a context manager block.
-
-        Args:
-            exc_type: Exception type if an error occurred, else None
-            exc_val: Exception value if an error occurred, else None
-            exc_tb: Exception traceback if an error occurred, else None
-        """
         self.close()

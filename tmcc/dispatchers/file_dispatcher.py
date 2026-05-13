@@ -80,12 +80,12 @@ class SerialDispatcher(Dispatcher):
             'bell': engine.bell,
             'last_command': engine.last_command or '',
             'line_comment': engine.line_comment,
-            'timestamp': engine.timestamp.strftime('%H:%M:%S.%f')[:11]
+            'command_timestamp': engine.command_timestamp.strftime('%H:%M:%S.%f')[:11],
+            'message_timestamp': datetime.now().strftime('%H:%M:%S.%f')[:11]
         }
         self._subscriptions.publish(topic, payload)
         if self._verbose:
             ts = datetime.now().strftime('%H:%M:%S.%f')[:11]
-            log.info(f"{ts}  {topic}  {json.dumps(payload)}")
 
     def run(self):
         last_publish = time.time()
