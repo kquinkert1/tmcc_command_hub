@@ -7,15 +7,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Oswald:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0c0f;
-            --panel: #111318;
-            --border: #1e2530;
-            --accent: #e8a020;
-            --accent2: #3a8fc7;
-            --text: #c8d0dc;
-            --text-dim: #4a5568;
-            --green: #2ecc71;
-            --red: #e74c3c;
+            --bg: #ffffff;
+            --panel: #f5f5f5;
+            --border: #dde1e7;
+            --accent: #c47a00;
+            --accent2: #1a6fa0;
+            --text: #1a1a1a;
+            --text-dim: #888888;
+            --green: #1a8a4a;
+            --red: #cc2200;
             --mono: 'Share Tech Mono', monospace;
             --head: 'Oswald', sans-serif;
         }
@@ -28,21 +28,6 @@
             font-family: var(--mono);
             min-height: 100vh;
             overflow-x: hidden;
-        }
-
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0,0,0,0.03) 2px,
-                rgba(0,0,0,0.03) 4px
-            );
-            pointer-events: none;
-            z-index: 9999;
         }
 
         header {
@@ -122,9 +107,7 @@
             border-bottom-color: var(--accent);
         }
 
-        .content {
-            padding: 32px;
-        }
+        .content { padding: 32px; }
 
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
@@ -156,9 +139,7 @@
             font-size: 13px;
         }
 
-        thead tr {
-            border-bottom: 1px solid var(--accent);
-        }
+        thead tr { border-bottom: 2px solid var(--accent); }
 
         th {
             font-family: var(--head);
@@ -176,7 +157,7 @@
             transition: background 0.15s;
         }
 
-        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        tbody tr:hover { background: rgba(0,0,0,0.03); }
 
         td {
             padding: 12px 16px;
@@ -217,7 +198,6 @@
             background: var(--accent2);
             border-radius: 2px;
             transition: width 0.4s ease;
-            box-shadow: 0 0 6px var(--accent2);
         }
 
         .dir-badge {
@@ -230,26 +210,22 @@
         }
 
         .dir-forward {
-            background: rgba(46,204,113,0.15);
+            background: rgba(26,138,74,0.1);
             color: var(--green);
-            border: 1px solid rgba(46,204,113,0.3);
+            border: 1px solid rgba(26,138,74,0.3);
         }
 
         .dir-reverse {
-            background: rgba(231,76,60,0.15);
+            background: rgba(204,34,0,0.1);
             color: var(--red);
-            border: 1px solid rgba(231,76,60,0.3);
+            border: 1px solid rgba(204,34,0,0.3);
         }
 
-        .bell-on {
-            color: var(--accent);
-            text-shadow: 0 0 8px var(--accent);
-        }
-
+        .bell-on { color: var(--accent); }
         .bell-off { color: var(--text-dim); }
 
         .last-cmd {
-            color: var(--text);
+            color: #000000;
             max-width: 220px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -266,6 +242,44 @@
         }
 
         .ts { color: var(--text-dim); font-size: 11px; }
+
+        .max-speed-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .max-speed-input {
+            width: 70px;
+            padding: 3px 6px;
+            font-family: var(--mono);
+            font-size: 12px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .max-speed-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .set-btn {
+            padding: 3px 8px;
+            font-family: var(--head);
+            font-size: 10px;
+            letter-spacing: 1px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .set-btn:hover { opacity: 0.8; }
+        .set-btn.saved { background: var(--green); }
 
         .empty-state {
             text-align: center;
@@ -285,7 +299,7 @@
         }
 
         @keyframes flash {
-            0% { background: rgba(232,160,32,0.08); }
+            0% { background: rgba(196,122,0,0.08); }
             100% { background: transparent; }
         }
 
@@ -317,6 +331,7 @@
                     <tr>
                         <th>Engine</th>
                         <th>Speed</th>
+                        <th>Max Speed</th>
                         <th>Direction</th>
                         <th>Bell</th>
                         <th>Last Command</th>
@@ -355,6 +370,30 @@
 
     const engines = {};
 
+    function setMaxSpeed(engineId, btn) {
+        const input = document.getElementById('max-speed-input-' + engineId);
+        const val = parseInt(input.value);
+        if (isNaN(val) || val < 0) {
+            input.style.borderColor = 'var(--red)';
+            return;
+        }
+        input.style.borderColor = '';
+        fetch(`/engine/${engineId}/max_speed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ max_speed: val })
+        }).then(r => r.json()).then(data => {
+            if (data.ok) {
+                btn.textContent = 'SAVED';
+                btn.classList.add('saved');
+                setTimeout(() => {
+                    btn.textContent = 'SET';
+                    btn.classList.remove('saved');
+                }, 1500);
+            }
+        });
+    }
+
     function renderEngines() {
         const ids = Object.keys(engines).sort((a, b) => a - b);
         if (ids.length === 0) {
@@ -367,17 +406,23 @@
 
         ids.forEach(id => {
             const e = engines[id];
-            const pct = Math.round((e.speed / (e.max_speed || 31)) * 100);
+            const maxSpd = e.max_speed || 2000000;
+            const pct = maxSpd === 2000000 ? 0 : Math.round((e.speed / maxSpd) * 100);
             const dirClass = e.direction === 'Forward' ? 'dir-forward' : 'dir-reverse';
             const bellClass = e.bell ? 'bell-on' : 'bell-off';
             const bellLabel = e.bell ? '🔔 ON' : 'OFF';
 
             let row = document.getElementById('engine-row-' + id);
-            if (!row) {
+            const isNew = !row;
+            if (isNew) {
                 row = document.createElement('tr');
                 row.id = 'engine-row-' + id;
                 tbody.appendChild(row);
             }
+
+            // Preserve max speed input value if user is editing
+            const existingInput = document.getElementById('max-speed-input-' + id);
+            const inputVal = existingInput ? existingInput.value : (maxSpd === 2000000 ? '' : maxSpd);
 
             row.innerHTML = `
                 <td><span class="engine-id">${id}</span></td>
@@ -387,6 +432,14 @@
                         <div class="speed-bar">
                             <div class="speed-fill" style="width:${pct}%"></div>
                         </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="max-speed-wrap">
+                        <input class="max-speed-input" id="max-speed-input-${id}"
+                            type="text" value="${inputVal}"
+                            placeholder="unlimited">
+                        <button class="set-btn" onclick="setMaxSpeed(${id}, this)">SET</button>
                     </div>
                 </td>
                 <td><span class="dir-badge ${dirClass}">${e.direction}</span></td>
