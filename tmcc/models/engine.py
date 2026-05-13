@@ -19,10 +19,10 @@ class Engine:
         self.direction = 'Forward'
         self.bell = False
         self.speed = 0
-        self.max_speed = 200
+        self.max_speed = 2_000_000
         self.last_command = None
         self.line_comment = ''
-        self.timestamp = datetime.now()
+        self.command_timestamp = datetime.now()
 
     def update(self, packet: bytes, comment: str = ''):
         """
@@ -52,7 +52,7 @@ class Engine:
 
         self.last_command = command.description
         self.line_comment = comment
-        self.timestamp = datetime.now()
+        self.command_timestamp = datetime.now()
 
     def __repr__(self):
         return (
@@ -60,5 +60,5 @@ class Engine:
             f"direction={self.direction}, bell={self.bell}, "
             f"last_command={self.last_command}, "
             f"line_comment={self.line_comment}, "
-            f"timestamp={self.timestamp})"
+            f"command_timestamp={self.command_timestamp})"
         )

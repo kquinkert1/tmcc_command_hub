@@ -30,7 +30,6 @@
             overflow-x: hidden;
         }
 
-        /* scanline effect */
         body::after {
             content: '';
             position: fixed;
@@ -96,7 +95,6 @@
             letter-spacing: 1px;
         }
 
-        /* Tabs */
         .tabs {
             display: flex;
             gap: 0;
@@ -124,7 +122,6 @@
             border-bottom-color: var(--accent);
         }
 
-        /* Content */
         .content {
             padding: 32px;
         }
@@ -132,7 +129,6 @@
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
-        /* Engine Table */
         .panel-header {
             display: flex;
             align-items: baseline;
@@ -288,7 +284,6 @@
             color: var(--border);
         }
 
-        /* Flash on update */
         @keyframes flash {
             0% { background: rgba(232,160,32,0.08); }
             100% { background: transparent; }
@@ -326,7 +321,8 @@
                         <th>Bell</th>
                         <th>Last Command</th>
                         <th>Comment</th>
-                        <th>Time</th>
+                        <th>Cmd Time</th>
+                        <th>Msg Time</th>
                     </tr>
                 </thead>
                 <tbody id="engine-tbody"></tbody>
@@ -336,7 +332,6 @@
 </div>
 
 <script>
-    // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -346,7 +341,6 @@
         });
     });
 
-    // SSE
     const dot = document.getElementById('status-dot');
     const statusLabel = document.getElementById('status-label');
     const tbody = document.getElementById('engine-tbody');
@@ -371,7 +365,6 @@
         table.style.display = 'table';
         emptyState.style.display = 'none';
 
-        // Update or add rows
         ids.forEach(id => {
             const e = engines[id];
             const pct = Math.round((e.speed / (e.max_speed || 31)) * 100);
@@ -400,11 +393,12 @@
                 <td><span class="${bellClass}">${bellLabel}</span></td>
                 <td><span class="last-cmd">${e.last_command || ''}</span></td>
                 <td><span class="comment">${e.line_comment || ''}</span></td>
-                <td><span class="ts">${e.timestamp || ''}</span></td>
+                <td><span class="ts">${e.command_timestamp || ''}</span></td>
+                <td><span class="ts">${e.message_timestamp || ''}</span></td>
             `;
 
             row.classList.remove('updated');
-            void row.offsetWidth; // reflow
+            void row.offsetWidth;
             row.classList.add('updated');
         });
 
@@ -423,4 +417,4 @@
     });
 </script>
 </body>
-</html
+</html>

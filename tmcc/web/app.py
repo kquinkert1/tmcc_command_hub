@@ -43,9 +43,10 @@ def stream():
         while True:
             engines = monitor.engines
             for engine_id, data in engines.items():
-                if last_seen.get(engine_id) != data:
-                    last_seen[engine_id] = data.copy()
-                    yield f"event: engine\ndata: {json.dumps(data)}\n\n"
+                current = json.dumps(data)
+                if last_seen.get(engine_id) != current:
+                    last_seen[engine_id] = current
+                    yield f"event: engine\ndata: {current}\n\n"
             time.sleep(0.2)
 
     return Response(event_stream(), mimetype='text/event-stream')

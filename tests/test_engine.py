@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from commands.engine import EngineCommand
+from commands.engine_command import EngineCommand
 
 
 class TestEngineCommand(unittest.TestCase):
