@@ -37,7 +37,7 @@ class TMCCSubscriptions:
     def publish(self, topic: str, payload: dict):
         """Publish a dict payload as JSON to a topic."""
         self._client.publish(topic, json.dumps(payload))
-        log.debug(f"Published to {topic}: {payload}")
+        # log.debug(f"Published to {topic}: {payload}")
 
     def subscribe(self, topic: str, callback):
         """Subscribe to a topic with a callback."""

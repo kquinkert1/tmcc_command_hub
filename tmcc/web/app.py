@@ -6,13 +6,14 @@ import configparser
 import os
 from flask import Flask, Response, render_template, request, jsonify
 from tmcc.monitors.speed_monitor import SpeedMonitor
+from tmcc.tmcc_subscriptions import TMCCSubscriptions
 
 log = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Shared monitor instance
 monitor = SpeedMonitor()
+subscriptions = TMCCSubscriptions()
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'tmcc.ini')
 
@@ -56,10 +57,33 @@ def set_max_speed(engine_id):
     with open(abs_config, 'w') as f:
         config.write(f)
 
-    # Update monitor's in-memory max speeds
     monitor._max_speeds[engine_id] = max_speed
     log.info(f"Set max speed for engine {engine_id} to {max_speed}")
     return jsonify({'ok': True, 'engine_id': engine_id, 'max_speed': max_speed})
+
+
+@app.route('/engine/<int:engine_id>/send_abs_speed', methods=['POST'])
+def send_abs_speed(engine_id):
+    """Publish absolute speed command to tmcc_send/engine/{id}."""
+    data = request.get_json()
+    speed = data.get('speed')
+    if speed is None:
+        return jsonify({'error': 'speed required'}), 400
+    try:
+        speed = int(speed)
+    except ValueError:
+        return jsonify({'error': 'speed must be an integer'}), 400
+
+    topic = f"tmcc_send/engine/{engine_id}"
+    payload = {
+        'action': 'ABSOLUTE_SPEED',
+        'address': engine_id,
+        'speed': speed,
+        'priority': False
+    }
+    subscriptions.publish(topic, payload)
+    log.info(f"Sent abs speed {speed} to engine {engine_id}")
+    return jsonify({'ok': True, 'engine_id': engine_id, 'speed': speed})
 
 
 @app.route('/stream')
@@ -81,6 +105,8 @@ def stream():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+
+    subscriptions.connect()
 
     t = threading.Thread(target=run_monitor, daemon=True)
     t.start()

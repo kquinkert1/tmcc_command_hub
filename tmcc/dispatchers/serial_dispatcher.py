@@ -12,6 +12,7 @@ from tmcc.factory.tmcc_command_factory import TMCCCommandFactory
 from tmcc.tmcc_subscriptions import TMCCSubscriptions
 from tmcc.models.engine import Engine
 from tmcc.tmcc_enums import CommandType
+from tmcc.commands.engine_command import EngineCommand
 
 log = logging.getLogger(__name__)
 
@@ -36,6 +37,9 @@ class SerialDispatcher(Dispatcher):
         self._engines = {}
         self._dirty = set()
 
+        # Subscribe to send commands
+        self._subscriptions.subscribe('tmcc_send/engine/#', self._on_send_command)
+
     def _load_log_filename(self) -> str:
         config = configparser.RawConfigParser()
         abs_config = os.path.abspath(CONFIG_FILE)
@@ -54,8 +58,40 @@ class SerialDispatcher(Dispatcher):
     def read(self) -> tuple:
         return self._adaptor.read()
 
-    def send(self, packet: bytes):
-        self._adaptor.send(packet)
+    def send(self, packet: bytes, priority: bool = False):
+        self._adaptor.send(packet, priority=priority)
+
+    def _on_send_command(self, client, userdata, message):
+        try:
+            payload = json.loads(message.payload)
+            action = payload.get('action')
+            address = payload.get('address')
+            priority = payload.get('priority', False)
+
+            if action == 'ABSOLUTE_SPEED':
+                speed = min(int(payload.get('speed', 0)), EngineCommand.MAX_ABSOLUTE_SPEED)
+                packet = EngineCommand.build_command(address, EngineCommand.ABSOLUTE_SPEED, speed)
+            elif action == 'RELATIVE_SPEED':
+                delta = payload.get('delta', 0)
+                packet = EngineCommand.build_command(address, EngineCommand.RELATIVE_SPEED, delta + 5)
+            elif hasattr(EngineCommand, action):
+                data_field = getattr(EngineCommand, action)
+                packet = EngineCommand.build_command(address, EngineCommand.ACTION, data_field)
+            else:
+                log.warning(f"Unknown action: {action}")
+                return
+
+            log.info(f"Send command: {message.topic}  {payload}")
+            self.send(packet, priority=priority)
+
+            # Update engine state
+            engine = self._get_or_create_engine(address)
+            engine.update(packet)
+            self._dirty.add(address)
+
+        except Exception as e:
+            log.error(f"Error processing send command: {e}")
+
 
     def _get_or_create_engine(self, address: int) -> Engine:
         if address not in self._engines:
@@ -116,6 +152,7 @@ class SerialDispatcher(Dispatcher):
                         # Publish all engines every 5 seconds
                         if now - last_publish >= PUBLISH_INTERVAL:
                             for engine in self._engines.values():
+                                log.debug(f"publish interval: {engine}")
                                 self.publish(engine)
                             last_publish = now
 

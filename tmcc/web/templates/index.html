@@ -195,9 +195,8 @@
 
         .speed-fill {
             height: 100%;
-            background: var(--accent2);
             border-radius: 2px;
-            transition: width 0.4s ease;
+            transition: width 0.4s ease, background 0.4s ease;
         }
 
         .dir-badge {
@@ -225,7 +224,6 @@
         .bell-off { color: var(--text-dim); }
 
         .last-cmd {
-            color: #000000;
             max-width: 220px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -281,6 +279,22 @@
         .set-btn:hover { opacity: 0.8; }
         .set-btn.saved { background: var(--green); }
 
+        .abs-btn {
+            padding: 3px 8px;
+            font-family: var(--head);
+            font-size: 10px;
+            letter-spacing: 1px;
+            background: var(--accent2);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .abs-btn:hover { opacity: 0.8; }
+        .abs-btn.sent { background: var(--green); }
+
         .empty-state {
             text-align: center;
             padding: 60px;
@@ -309,6 +323,7 @@
 <body>
 
 <header>
+    <img src="/static/images/logo.png" alt="Logo" style="height: 80px;">
     <div class="logo">TMCC <span>Command Hub</span></div>
     <div class="status-label" id="status-label">CONNECTING</div>
     <div class="status-dot disconnected" id="status-dot"></div>
@@ -370,6 +385,23 @@
 
     const engines = {};
 
+ function getCmdColor(cmdTimestamp) {
+    if (!cmdTimestamp) return '#bbbbbb';
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const ageSecs = (now - new Date(`${today}T${cmdTimestamp}`)) / 1000;
+    if (ageSecs <= 3) return '#008B00';
+    if (ageSecs <= 7) return '#cc9900';
+    if (ageSecs <= 15) return '#B80000';
+    return '#bbbbbb';
+}
+
+    function getBarColor(pct) {
+        if (pct >= 80) return '#8B0000';
+        if (pct >= 75) return '#B8860B';
+        return '#006400';
+    }
+
     function setMaxSpeed(engineId, btn) {
         const input = document.getElementById('max-speed-input-' + engineId);
         const val = parseInt(input.value);
@@ -394,6 +426,30 @@
         });
     }
 
+    function sendAbsSpeed(engineId, btn) {
+        const input = document.getElementById('max-speed-input-' + engineId);
+        const val = parseInt(input.value);
+        if (isNaN(val) || val < 0) {
+            input.style.borderColor = 'var(--red)';
+            return;
+        }
+        input.style.borderColor = '';
+        fetch(`/engine/${engineId}/send_abs_speed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ speed: val })
+        }).then(r => r.json()).then(data => {
+            if (data.ok) {
+                btn.textContent = 'SENT';
+                btn.classList.add('sent');
+                setTimeout(() => {
+                    btn.textContent = 'ABS SEND';
+                    btn.classList.remove('sent');
+                }, 1500);
+            }
+        });
+    }
+
     function renderEngines() {
         const ids = Object.keys(engines).sort((a, b) => a - b);
         if (ids.length === 0) {
@@ -408,19 +464,19 @@
             const e = engines[id];
             const maxSpd = e.max_speed || 2000000;
             const pct = maxSpd === 2000000 ? 0 : Math.round((e.speed / maxSpd) * 100);
+            const barColor = getBarColor(pct);
             const dirClass = e.direction === 'Forward' ? 'dir-forward' : 'dir-reverse';
             const bellClass = e.bell ? 'bell-on' : 'bell-off';
             const bellLabel = e.bell ? '🔔 ON' : 'OFF';
+            const cmdColor = getCmdColor(e.command_timestamp);
 
             let row = document.getElementById('engine-row-' + id);
-            const isNew = !row;
-            if (isNew) {
+            if (!row) {
                 row = document.createElement('tr');
                 row.id = 'engine-row-' + id;
                 tbody.appendChild(row);
             }
 
-            // Preserve max speed input value if user is editing
             const existingInput = document.getElementById('max-speed-input-' + id);
             const inputVal = existingInput ? existingInput.value : (maxSpd === 2000000 ? '' : maxSpd);
 
@@ -430,21 +486,22 @@
                     <div class="speed-bar-wrap">
                         <span class="speed-val">${e.speed}</span>
                         <div class="speed-bar">
-                            <div class="speed-fill" style="width:${pct}%"></div>
+                            <div class="speed-fill" style="width:${pct}%; background:${barColor}"></div>
                         </div>
                     </div>
                 </td>
                 <td>
                     <div class="max-speed-wrap">
                         <input class="max-speed-input" id="max-speed-input-${id}"
-                            type="text" value="${inputVal}"
-                            placeholder="unlimited">
+                               type="text" value="${inputVal}"
+                               placeholder="unlimited">
                         <button class="set-btn" onclick="setMaxSpeed(${id}, this)">SET</button>
+                        <button class="abs-btn" onclick="sendAbsSpeed(${id}, this)">ABS SEND</button>
                     </div>
                 </td>
                 <td><span class="dir-badge ${dirClass}">${e.direction}</span></td>
                 <td><span class="${bellClass}">${bellLabel}</span></td>
-                <td><span class="last-cmd">${e.last_command || ''}</span></td>
+                <td><span class="last-cmd" style="color:${cmdColor}">${e.last_command || ''}</span></td>
                 <td><span class="comment">${e.line_comment || ''}</span></td>
                 <td><span class="ts">${e.command_timestamp || ''}</span></td>
                 <td><span class="ts">${e.message_timestamp || ''}</span></td>
@@ -457,6 +514,17 @@
 
         updateTime.textContent = 'updated ' + new Date().toLocaleTimeString();
     }
+
+    // Only update colors — do NOT rebuild rows
+    setInterval(() => {
+        Object.keys(engines).forEach(id => {
+            const e = engines[id];
+            const span = document.querySelector(`#engine-row-${id} .last-cmd`);
+            if (span) {
+                span.style.color = getCmdColor(e.command_timestamp);
+            }
+        });
+    }, 1000);
 
     const evtSource = new EventSource('/stream');
 
