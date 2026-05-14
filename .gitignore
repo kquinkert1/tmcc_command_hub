@@ -1,1 +1,5 @@
-âˆtmcc/dispatchers/logs/
+.DS_Store
+.idea/
+tmcc/.DS_Store
+tmcc/__pycache__/
+tmcc/dispatchers/logs/
