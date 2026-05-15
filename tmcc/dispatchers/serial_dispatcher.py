@@ -83,6 +83,7 @@ class SerialDispatcher(Dispatcher):
             numeric_packet = EngineCommand.build_command(engine_id, EngineCommand.ACTION, EngineCommand.NUMERIC_BASE | 7)
             self.send(numeric_packet, priority=True)
             log.debug(f"Engine {engine_id}: sent NUMERIC 7")
+            time.sleep(2)
 
     def _on_send_command(self, client, userdata, message):
         try:
