@@ -73,11 +73,16 @@ class SerialDispatcher(Dispatcher):
             fwd_packet = EngineCommand.build_command(engine_id, EngineCommand.ACTION, EngineCommand.FORWARD)
             self.send(fwd_packet, priority=True)
             log.debug(f"Engine {engine_id}: sent FORWARD_DIRECTION")
-            time.sleep(0.25)
             stop_packet = EngineCommand.build_command(engine_id, EngineCommand.ABSOLUTE_SPEED, 0)
             self.send(stop_packet, priority=True)
             log.debug(f"Engine {engine_id}: sent ABSOLUTE_SPEED=0")
-            time.sleep(0.25)
+            aux1_packet = EngineCommand.build_command(engine_id, EngineCommand.ACTION, EngineCommand.AUX1_OPTION_1)
+            self.send(aux1_packet, priority=True)
+            log.debug(f"Engine {engine_id}: sent AUX1_OPTION_1")
+
+            numeric_packet = EngineCommand.build_command(engine_id, EngineCommand.ACTION, EngineCommand.NUMERIC_BASE | 7)
+            self.send(numeric_packet, priority=True)
+            log.debug(f"Engine {engine_id}: sent NUMERIC 7")
 
     def _on_send_command(self, client, userdata, message):
         try:
