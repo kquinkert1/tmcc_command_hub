@@ -25,10 +25,11 @@ CONFIG_KEY = 'log_filename'
 
 class SerialDispatcher(Dispatcher):
 
-    def __init__(self, port: str = None, verbose: bool = False):
+    def __init__(self, port: str = None, verbose: bool = False, yop_enabled: bool = True):
         super().__init__()
         self._port = port
         self._verbose = verbose
+        self._yop_enabled = yop_enabled
         self._log_filename = self._load_log_filename()
         self._log_file = None
         self._adaptor = self.create_adaptor()
@@ -53,7 +54,7 @@ class SerialDispatcher(Dispatcher):
         return filename
 
     def create_adaptor(self):
-        return SerialAdaptor(port=self._port)
+        return SerialAdaptor(port=self._port, yop_enabled=self._yop_enabled)
 
     def read(self) -> tuple:
         return self._adaptor.read()
@@ -193,6 +194,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Dispatch TMCC packets from serial port.')
     parser.add_argument('-p', '--port', help='Serial port (e.g. /dev/ttyS0)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+    parser.add_argument('--no-yop', action='store_true', help='Disable YOP keepalive')
     parser.add_argument('--list-ports', action='store_true', help='List available serial ports and exit')
     args = parser.parse_args()
 
@@ -206,5 +208,5 @@ if __name__ == '__main__':
             print("No serial ports found.")
         exit(0)
 
-    dispatcher = SerialDispatcher(port=args.port, verbose=args.verbose)
+    dispatcher = SerialDispatcher(port=args.port, verbose=args.verbose, yop_enabled=not args.no_yop)
     dispatcher.run()

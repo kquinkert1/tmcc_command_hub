@@ -143,6 +143,37 @@
             letter-spacing: 1px;
         }
 
+        .highball-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 8px;
+        }
+
+        .highball-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #cccccc;
+            background: #cccccc;
+            cursor: pointer;
+            transition: background 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        .highball-checkbox:checked {
+            border-color: #2d8a4e;
+            background: #cccccc;
+        }
+
+        .highball-checkbox.flicker {
+            background: #2d8a4e;
+            box-shadow: 0 0 8px #2d8a4e;
+        }
+
         .speed-bar-wrap { display: flex; align-items: center; gap: 10px; }
         .speed-val { width: 28px; text-align: right; color: var(--accent2); }
 
@@ -442,6 +473,18 @@
     const engines = {};
     const userEdited = {};
     const boostTimers = {};
+    const highballCounts = {};
+
+    function toggleSafeguard(engineId, checkbox) {
+        const enabled = checkbox.checked;
+        fetch(`/engine/${engineId}/safeguard`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled })
+        }).then(r => r.json()).then(data => {
+            if (!data.ok) checkbox.checked = !enabled;
+        });
+    }
 
     function getCmdColor(cmdTimestamp) {
         if (!cmdTimestamp) return '#bbbbbb';
@@ -496,6 +539,114 @@
         });
     }
 
+    function buildRow(id, e) {
+        const hasIniMax = e.max_speed !== null && e.max_speed !== undefined;
+        const maxSpd = hasIniMax ? e.max_speed : null;
+        const pct = hasIniMax ? Math.round((e.speed / maxSpd) * 100) : 0;
+        const barColor = getBarColor(pct);
+        const dirClass = e.direction === 'Forward' ? 'dir-forward' : 'dir-reverse';
+        const bellClass = e.bell ? 'bell-on' : 'bell-off';
+        const bellLabel = e.bell ? '🔔 ON' : 'OFF';
+        const cmdColor = getCmdColor(e.command_timestamp);
+        const safeguardChecked = e.safeguard_enabled ? 'checked' : '';
+        const boostActive = boostTimers[id] && (Date.now() - boostTimers[id]) < 5000;
+        const inputVal = userEdited[id] !== undefined ? userEdited[id] : (hasIniMax ? maxSpd : e.speed);
+
+        return `
+            <td>
+                <div class="highball-wrap">
+                    <input type="checkbox" class="highball-checkbox" id="safeguard-cb-${id}"
+                           ${safeguardChecked} onchange="toggleSafeguard(${id}, this)">
+                </div>
+                <span class="engine-id">${id}</span>
+                <span class="boost-badge ${boostActive ? 'boost-active' : ''}">BOOST</span>
+            </td>
+            <td>
+                <div class="speed-bar-wrap">
+                    <span class="speed-val">${e.speed}</span>
+                    <div class="speed-bar">
+                        <div class="speed-fill" style="width:${pct}%; background:${barColor}"></div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="max-speed-wrap">
+                    <input class="max-speed-input" id="max-speed-input-${id}"
+                           type="text" value="${inputVal}" placeholder="unlimited">
+                    <button class="set-btn" onclick="setMaxSpeed(${id}, this)">SET</button>
+                    <button class="abs-btn" onclick="sendAbsSpeed(${id}, this)">ABS SEND</button>
+                </div>
+            </td>
+            <td><span class="dir-badge ${dirClass}">${e.direction}</span></td>
+            <td><span class="${bellClass}">${bellLabel}</span></td>
+            <td><span class="last-cmd" style="color:${cmdColor}">${e.last_command || ''}</span></td>
+            <td><span class="comment">${boostActive ? 'boostActive' : (e.line_comment || '')}</span></td>
+            <td><span class="ts">${e.command_timestamp || ''}</span></td>
+            <td><span class="ts">${e.message_timestamp || ''}</span></td>
+        `;
+    }
+
+    function updateRow(id, e) {
+        const row = document.getElementById('engine-row-' + id);
+        if (!row) return;
+
+        const hasIniMax = e.max_speed !== null && e.max_speed !== undefined;
+        const maxSpd = hasIniMax ? e.max_speed : null;
+        const pct = hasIniMax ? Math.round((e.speed / maxSpd) * 100) : 0;
+        const barColor = getBarColor(pct);
+        const boostActive = boostTimers[id] && (Date.now() - boostTimers[id]) < 5000;
+
+        // Speed
+        const speedVal = row.querySelector('.speed-val');
+        if (speedVal) speedVal.textContent = e.speed;
+        const speedFill = row.querySelector('.speed-fill');
+        if (speedFill) { speedFill.style.width = pct + '%'; speedFill.style.background = barColor; }
+
+        // Max speed input — only update if user hasn't edited
+        if (userEdited[id] === undefined) {
+            const input = document.getElementById('max-speed-input-' + id);
+            if (input) input.value = hasIniMax ? maxSpd : e.speed;
+        }
+
+        // Direction
+        const dirBadge = row.querySelector('.dir-badge');
+        if (dirBadge) {
+            dirBadge.className = 'dir-badge ' + (e.direction === 'Forward' ? 'dir-forward' : 'dir-reverse');
+            dirBadge.textContent = e.direction;
+        }
+
+        // Bell
+        const bellSpan = row.querySelector('td:nth-child(5) span');
+        if (bellSpan) {
+            bellSpan.className = e.bell ? 'bell-on' : 'bell-off';
+            bellSpan.textContent = e.bell ? '🔔 ON' : 'OFF';
+        }
+
+        // Last command
+        const lastCmd = row.querySelector('.last-cmd');
+        if (lastCmd) {
+            lastCmd.textContent = e.last_command || '';
+            lastCmd.style.color = getCmdColor(e.command_timestamp);
+        }
+
+        // Comment
+        const comment = row.querySelector('.comment');
+        if (comment) comment.textContent = boostActive ? 'boostActive' : (e.line_comment || '');
+
+        // Timestamps
+        const ts = row.querySelectorAll('.ts');
+        if (ts[0]) ts[0].textContent = e.command_timestamp || '';
+        if (ts[1]) ts[1].textContent = e.message_timestamp || '';
+
+        // Boost badge
+        const boostBadge = row.querySelector('.boost-badge');
+        if (boostBadge) boostBadge.className = 'boost-badge' + (boostActive ? ' boost-active' : '');
+
+        // Safeguard checkbox
+        const cb = document.getElementById('safeguard-cb-' + id);
+        if (cb) cb.checked = e.safeguard_enabled || false;
+    }
+
     function renderEngines() {
         const ids = Object.keys(engines).sort((a, b) => Number(a) - Number(b));
         if (ids.length === 0) {
@@ -508,76 +659,45 @@
 
         ids.forEach(id => {
             const e = engines[id];
-            const hasIniMax = e.max_speed !== null && e.max_speed !== undefined;
-            const maxSpd = hasIniMax ? e.max_speed : null;
-            const pct = hasIniMax ? Math.round((e.speed / maxSpd) * 100) : 0;
-            const barColor = getBarColor(pct);
-            const dirClass = e.direction === 'Forward' ? 'dir-forward' : 'dir-reverse';
-            const bellClass = e.bell ? 'bell-on' : 'bell-off';
-            const bellLabel = e.bell ? '🔔 ON' : 'OFF';
-            const cmdColor = getCmdColor(e.command_timestamp);
 
-            // Track boost timer using command (nulled after publish interval)
+            // Track boost timer
             if (e.command && e.command.trim().includes('Boost')) {
                 boostTimers[id] = Date.now();
             }
-            const boostActive = boostTimers[id] && (Date.now() - boostTimers[id]) < 5000;
 
-            // Determine input value before rebuilding DOM
-            let inputVal;
-            if (userEdited[id]) {
-                inputVal = userEdited[id];
-            } else if (hasIniMax) {
-                inputVal = maxSpd;
-            } else {
-                inputVal = e.speed;
+            // Track highball flicker
+            const prevCount = highballCounts[id] || 0;
+            const newCount = e.highball_count || 0;
+            if (newCount !== prevCount) {
+                highballCounts[id] = newCount;
+                setTimeout(() => {
+                    const cb = document.getElementById('safeguard-cb-' + id);
+                    if (cb && cb.checked) {
+                        cb.classList.add('flicker');
+                        setTimeout(() => cb.classList.remove('flicker'), 300);
+                    }
+                }, 10);
             }
 
             let row = document.getElementById('engine-row-' + id);
             if (!row) {
+                // New engine — build full row in sorted position
                 row = document.createElement('tr');
                 row.id = 'engine-row-' + id;
-                tbody.appendChild(row);
+                const allRows = [...tbody.querySelectorAll('tr')];
+                const nextRow = allRows.find(r => Number(r.id.replace('engine-row-', '')) > Number(id));
+                if (nextRow) {
+                    tbody.insertBefore(row, nextRow);
+                } else {
+                    tbody.appendChild(row);
+                }
+                row.innerHTML = buildRow(id, e);
+                const newInput = document.getElementById('max-speed-input-' + id);
+                if (newInput) newInput.addEventListener('input', () => { userEdited[id] = newInput.value; });
+            } else {
+                // Existing engine — update cells in place
+                updateRow(id, e);
             }
-
-            row.innerHTML = `
-                <td>
-                    <span class="engine-id">${id}</span>
-                    <span class="boost-badge ${boostActive ? 'boost-active' : ''}">BOOST</span>
-                </td>
-                <td>
-                    <div class="speed-bar-wrap">
-                        <span class="speed-val">${e.speed}</span>
-                        <div class="speed-bar">
-                            <div class="speed-fill" style="width:${pct}%; background:${barColor}"></div>
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <div class="max-speed-wrap">
-                        <input class="max-speed-input" id="max-speed-input-${id}"
-                               type="text" value="${inputVal}" placeholder="unlimited">
-                        <button class="set-btn" onclick="setMaxSpeed(${id}, this)">SET</button>
-                        <button class="abs-btn" onclick="sendAbsSpeed(${id}, this)">ABS SEND</button>
-                    </div>
-                </td>
-                <td><span class="dir-badge ${dirClass}">${e.direction}</span></td>
-                <td><span class="${bellClass}">${bellLabel}</span></td>
-                <td><span class="last-cmd" style="color:${cmdColor}">${e.last_command || ''}</span></td>
-                <td><span class="comment">${boostActive ? 'boostActive' : (e.line_comment || '')}</span></td>
-                <td><span class="ts">${e.command_timestamp || ''}</span></td>
-                <td><span class="ts">${e.message_timestamp || ''}</span></td>
-            `;
-
-            // Attach input listener after rebuild
-            const newInput = document.getElementById('max-speed-input-' + id);
-            newInput.addEventListener('input', () => {
-                userEdited[id] = newInput.value;
-            });
-
-            row.classList.remove('updated');
-            void row.offsetWidth;
-            row.classList.add('updated');
         });
 
         updateTime.textContent = 'updated ' + new Date().toLocaleTimeString();
@@ -587,21 +707,18 @@
     setInterval(() => {
         Object.keys(engines).forEach(id => {
             const e = engines[id];
-            const span = document.querySelector(`#engine-row-${id} .last-cmd`);
+            const row = document.getElementById('engine-row-' + id);
+            if (!row) return;
+
+            const span = row.querySelector('.last-cmd');
             if (span) span.style.color = getCmdColor(e.command_timestamp);
 
-            // Update boost badge class
-            const boostBadge = document.querySelector(`#engine-row-${id} .boost-badge`);
-            if (boostBadge) {
-                const boostActive = boostTimers[id] && (Date.now() - boostTimers[id]) < 5000;
-                boostBadge.className = 'boost-badge' + (boostActive ? ' boost-active' : '');
+            const boostActive = boostTimers[id] && (Date.now() - boostTimers[id]) < 5000;
+            const boostBadge = row.querySelector('.boost-badge');
+            if (boostBadge) boostBadge.className = 'boost-badge' + (boostActive ? ' boost-active' : '');
 
-                // Update comment cell
-                const commentCell = document.querySelector(`#engine-row-${id} .comment`);
-                if (commentCell) {
-                    commentCell.textContent = boostActive ? 'boostActive' : (e.line_comment || '');
-                }
-            }
+            const commentCell = row.querySelector('.comment');
+            if (commentCell) commentCell.textContent = boostActive ? 'boostActive' : (e.line_comment || '');
         });
     }, 1000);
 

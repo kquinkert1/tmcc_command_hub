@@ -18,6 +18,7 @@ monitor = SpeedMonitor()
 subscriptions = TMCCSubscriptions()
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'tmcc.ini')
+SAFEGUARD_SECTION = 'SafeguardEnabled'
 
 
 def _get_machine_id():
@@ -40,6 +41,7 @@ def _load_port() -> int:
 
 def run_monitor():
     monitor.monitor_subscriptions()
+    monitor.start_safeguard()
     while True:
         time.sleep(0.1)
 
@@ -137,6 +139,29 @@ def send_abs_speed(engine_id):
     subscriptions.publish(topic, payload)
     log.info(f"Sent abs speed {speed} to engine {engine_id}")
     return jsonify({'ok': True, 'engine_id': engine_id, 'speed': speed})
+
+
+@app.route('/engine/<int:engine_id>/safeguard', methods=['POST'])
+def set_safeguard(engine_id):
+    data = request.get_json()
+    enabled = data.get('enabled')
+    if enabled is None:
+        return jsonify({'error': 'enabled required'}), 400
+
+    enabled = bool(enabled)
+
+    abs_config = os.path.abspath(CONFIG_FILE)
+    config = configparser.RawConfigParser()
+    config.read(abs_config)
+    if not config.has_section(SAFEGUARD_SECTION):
+        config.add_section(SAFEGUARD_SECTION)
+    config.set(SAFEGUARD_SECTION, str(engine_id), str(enabled))
+    with open(abs_config, 'w') as f:
+        config.write(f)
+
+    monitor.set_safeguard_enabled(engine_id, enabled)
+    log.info(f"Safeguard {'enabled' if enabled else 'disabled'} for engine {engine_id}")
+    return jsonify({'ok': True, 'engine_id': engine_id, 'enabled': enabled})
 
 
 @app.route('/stream')

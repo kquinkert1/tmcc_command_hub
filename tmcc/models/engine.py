@@ -60,6 +60,16 @@ class Engine:
         self.line_comment = comment
         self.command_timestamp = datetime.now()
 
+    def sync_from_payload(self, payload: dict):
+        """Sync engine state from an MQTT payload dict."""
+        self.speed = payload.get('speed', self.speed)
+        self.direction = payload.get('direction', self.direction)
+        self.bell = payload.get('bell', self.bell)
+        self.max_speed = payload.get('max_speed', self.max_speed)
+        self.last_command = payload.get('last_command', self.last_command)
+        self.command = payload.get('command', self.command)
+        self.line_comment = payload.get('line_comment', self.line_comment)
+
     def clear_command(self):
         """Null out the current command after publish interval expires."""
         self.command = None
