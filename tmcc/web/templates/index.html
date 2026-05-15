@@ -223,7 +223,6 @@
         .abs-btn:hover { opacity: 0.8; }
         .abs-btn.sent { background: var(--green); }
 
-        /* Serial port tab */
         .port-list { list-style: none; margin-bottom: 24px; }
 
         .port-item {
@@ -308,7 +307,6 @@
 </nav>
 
 <div class="content">
-    <!-- Speed Monitor Tab -->
     <div class="tab-panel active" id="tab-speed">
         <div class="panel-header">
             <div class="panel-title">Engine Status</div>
@@ -335,7 +333,6 @@
         </div>
     </div>
 
-    <!-- Serial Port Tab -->
     <div class="tab-panel" id="tab-serial">
         <div class="panel-header">
             <div class="panel-title">Serial Port</div>
@@ -348,7 +345,6 @@
 </div>
 
 <script>
-    // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -371,7 +367,6 @@
         statusLabel.textContent = ok ? 'LIVE' : 'DISCONNECTED';
     }
 
-    // Serial port
     let selectedPort = null;
 
     function loadPorts() {
@@ -425,8 +420,10 @@
         });
     }
 
-    // Engine table
     const engines = {};
+
+    // Track user-edited state per engine outside of DOM
+    const userEdited = {};
 
     function getCmdColor(cmdTimestamp) {
         if (!cmdTimestamp) return '#bbbbbb';
@@ -493,13 +490,24 @@
 
         ids.forEach(id => {
             const e = engines[id];
-            const maxSpd = e.max_speed || 2000000;
-            const pct = maxSpd === 2000000 ? 0 : Math.round((e.speed / maxSpd) * 100);
+            const hasIniMax = e.max_speed !== null && e.max_speed !== undefined;
+            const maxSpd = hasIniMax ? e.max_speed : null;
+            const pct = hasIniMax ? Math.round((e.speed / maxSpd) * 100) : 0;
             const barColor = getBarColor(pct);
             const dirClass = e.direction === 'Forward' ? 'dir-forward' : 'dir-reverse';
             const bellClass = e.bell ? 'bell-on' : 'bell-off';
             const bellLabel = e.bell ? '🔔 ON' : 'OFF';
             const cmdColor = getCmdColor(e.command_timestamp);
+
+            // Determine input value before rebuilding DOM
+            let inputVal;
+            if (userEdited[id]) {
+                inputVal = userEdited[id];
+            } else if (hasIniMax) {
+                inputVal = maxSpd;
+            } else {
+                inputVal = e.speed;
+            }
 
             let row = document.getElementById('engine-row-' + id);
             if (!row) {
@@ -507,9 +515,6 @@
                 row.id = 'engine-row-' + id;
                 tbody.appendChild(row);
             }
-
-            const existingInput = document.getElementById('max-speed-input-' + id);
-            const inputVal = existingInput ? existingInput.value : (maxSpd === 2000000 ? '' : maxSpd);
 
             row.innerHTML = `
                 <td><span class="engine-id">${id}</span></td>
@@ -537,6 +542,12 @@
                 <td><span class="ts">${e.message_timestamp || ''}</span></td>
             `;
 
+            // Attach input listener after rebuild
+            const newInput = document.getElementById('max-speed-input-' + id);
+            newInput.addEventListener('input', () => {
+                userEdited[id] = newInput.value;
+            });
+
             row.classList.remove('updated');
             void row.offsetWidth;
             row.classList.add('updated');
@@ -545,7 +556,6 @@
         updateTime.textContent = 'updated ' + new Date().toLocaleTimeString();
     }
 
-    // Only update colors
     setInterval(() => {
         Object.keys(engines).forEach(id => {
             const e = engines[id];

@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'tmcc.ini')
 CONFIG_SECTION = 'EngineMaxSpeeds'
-DEFAULT_MAX_SPEED = 2_000_000
+DEFAULT_MAX_SPEED = None
 
 
 class SpeedMonitor(Monitor):
@@ -71,7 +71,7 @@ class SpeedMonitor(Monitor):
                 e = self._engines[address]
                 bell = 'On' if e['bell'] else 'Off'
                 max_spd = e.get('max_speed', DEFAULT_MAX_SPEED)
-                max_str = '—' if max_spd == DEFAULT_MAX_SPEED else str(max_spd)
+                max_str = '—' if max_spd is None else str(max_spd)
                 print(f"  {address:>8}  {e['speed']:>6}  {max_str:>10}  {e['direction']:<10}  {bell:<5}  {e['last_command']:<30}  {e['command_timestamp']}  {e['message_timestamp']}  {e.get('line_comment', '')}")
         print()
         self._dirty = False
