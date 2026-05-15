@@ -32,7 +32,6 @@ class SpeedMonitor(Monitor):
         self._engine_objs = {}         # address -> Engine instance
         self._last_highball = {}       # address -> timestamp of last highball
         self._highball_counts = {}     # address -> highball count
-        self._safeguard_enabled = {}   # address -> bool
         self._dirty = False
         self._max_speeds = self._load_max_speeds()
         self._safeguard_enabled = self._load_safeguard_enabled()
@@ -76,7 +75,13 @@ class SpeedMonitor(Monitor):
     def set_safeguard_enabled(self, engine_id: int, enabled: bool):
         with self._lock:
             self._safeguard_enabled[engine_id] = enabled
-        log.info(f"Safeguard {'enabled' if enabled else 'disabled'} for engine {engine_id}")
+            self._highball_counts[engine_id] = 0
+        log.info(f"Safeguard {'enabled' if enabled else 'disabled'} for engine {engine_id}, highball count reset")
+
+    def reset_highball_count(self, engine_id: int):
+        with self._lock:
+            self._highball_counts[engine_id] = 0
+        log.info(f"Highball count reset for engine {engine_id}")
 
     def is_safeguard_enabled(self, engine_id: int) -> bool:
         return self._safeguard_enabled.get(engine_id, False)
@@ -109,6 +114,10 @@ class SpeedMonitor(Monitor):
         if payload.get('command') and 'Boost' in payload['command']:
             self.handle_boost(engine_id)
 
+        if payload.get('command') and 'Open Rear Coupler' in payload['command']:
+            log.info(f"Rear coupler detected for engine {engine_id} — triggering emergency stop")
+            threading.Thread(target=self.emergency_stop, args=(engine_id,), daemon=True).start()
+
         self._dirty = True
 
     def handle_boost(self, engine_id: int):
@@ -137,6 +146,33 @@ class SpeedMonitor(Monitor):
             engine = self._get_or_create_engine(engine_id)
             speed = engine.speed
         self._do_highball(engine_id, speed)
+
+    def emergency_stop(self, engine_id: int):
+        with self._lock:
+            engine = self._get_or_create_engine(engine_id)
+            speed = engine.speed
+
+        topic = f"tmcc_send/engine/{engine_id}"
+        log.info(f"Emergency stop engine {engine_id} from speed {speed}")
+
+        estimated = speed
+        while estimated > 0:
+            self._subscriptions.publish(topic, {
+                'action': 'RELATIVE_SPEED',
+                'address': engine_id,
+                'delta': -3,
+                'priority': True
+            })
+            estimated -= 3
+            time.sleep(0.1)
+
+        self._subscriptions.publish(topic, {
+            'action': 'ABSOLUTE_SPEED',
+            'address': engine_id,
+            'speed': 0,
+            'priority': True
+        })
+        log.info(f"Emergency stop complete for engine {engine_id}")
 
     def safeguard(self):
         log.info("Safeguard thread started")

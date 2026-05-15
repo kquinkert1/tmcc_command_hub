@@ -219,6 +219,23 @@
             border: 1px solid rgba(204,34,0,0.3);
         }
 
+        .estop-badge {
+            display: none;
+            padding: 2px 8px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            border-radius: 2px;
+            font-family: var(--head);
+            background: rgba(204,34,0,0.15);
+            color: var(--red);
+            border: 1px solid rgba(204,34,0,0.5);
+            margin-left: 8px;
+        }
+
+        .estop-badge.estop-active {
+            display: inline-block;
+        }
+
         .bell-on { color: var(--accent); }
         .bell-off { color: var(--text-dim); }
 
@@ -474,6 +491,7 @@
     const userEdited = {};
     const boostTimers = {};
     const highballCounts = {};
+    const estopFlags = {};  // true if estop was triggered, clears when highball_count resets
 
     function toggleSafeguard(engineId, checkbox) {
         const enabled = checkbox.checked;
@@ -482,7 +500,13 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ enabled })
         }).then(r => r.json()).then(data => {
-            if (!data.ok) checkbox.checked = !enabled;
+            if (data.ok) {
+                // Reset estop flag and highball count on toggle
+                estopFlags[engineId] = false;
+                highballCounts[engineId] = 0;
+            } else {
+                checkbox.checked = !enabled;
+            }
         });
     }
 
@@ -550,6 +574,7 @@
         const cmdColor = getCmdColor(e.command_timestamp);
         const safeguardChecked = e.safeguard_enabled ? 'checked' : '';
         const boostActive = boostTimers[id] && (Date.now() - boostTimers[id]) < 5000;
+        const estopActive = estopFlags[id] && (e.highball_count || 0) > 3;
         const inputVal = userEdited[id] !== undefined ? userEdited[id] : (hasIniMax ? maxSpd : e.speed);
 
         return `
@@ -560,6 +585,7 @@
                 </div>
                 <span class="engine-id">${id}</span>
                 <span class="boost-badge ${boostActive ? 'boost-active' : ''}">BOOST</span>
+                <span class="estop-badge ${estopActive ? 'estop-active' : ''}">🛑 STOP</span>
             </td>
             <td>
                 <div class="speed-bar-wrap">
@@ -595,6 +621,7 @@
         const pct = hasIniMax ? Math.round((e.speed / maxSpd) * 100) : 0;
         const barColor = getBarColor(pct);
         const boostActive = boostTimers[id] && (Date.now() - boostTimers[id]) < 5000;
+        const estopActive = estopFlags[id] && (e.highball_count || 0) > 3;
 
         // Speed
         const speedVal = row.querySelector('.speed-val');
@@ -602,7 +629,7 @@
         const speedFill = row.querySelector('.speed-fill');
         if (speedFill) { speedFill.style.width = pct + '%'; speedFill.style.background = barColor; }
 
-        // Max speed input — only update if user hasn't edited
+        // Max speed input
         if (userEdited[id] === undefined) {
             const input = document.getElementById('max-speed-input-' + id);
             if (input) input.value = hasIniMax ? maxSpd : e.speed;
@@ -642,6 +669,10 @@
         const boostBadge = row.querySelector('.boost-badge');
         if (boostBadge) boostBadge.className = 'boost-badge' + (boostActive ? ' boost-active' : '');
 
+        // Estop badge
+        const estopBadge = row.querySelector('.estop-badge');
+        if (estopBadge) estopBadge.className = 'estop-badge' + (estopActive ? ' estop-active' : '');
+
         // Safeguard checkbox
         const cb = document.getElementById('safeguard-cb-' + id);
         if (cb) cb.checked = e.safeguard_enabled || false;
@@ -665,11 +696,20 @@
                 boostTimers[id] = Date.now();
             }
 
+            // Track estop flag
+            if (e.command && e.command.trim().includes('Open Rear Coupler')) {
+                estopFlags[id] = true;
+            }
+
             // Track highball flicker
             const prevCount = highballCounts[id] || 0;
             const newCount = e.highball_count || 0;
             if (newCount !== prevCount) {
                 highballCounts[id] = newCount;
+                // If count was reset to 0, clear estop flag
+                if (newCount === 0) {
+                    estopFlags[id] = false;
+                }
                 setTimeout(() => {
                     const cb = document.getElementById('safeguard-cb-' + id);
                     if (cb && cb.checked) {
@@ -681,7 +721,6 @@
 
             let row = document.getElementById('engine-row-' + id);
             if (!row) {
-                // New engine — build full row in sorted position
                 row = document.createElement('tr');
                 row.id = 'engine-row-' + id;
                 const allRows = [...tbody.querySelectorAll('tr')];
@@ -695,7 +734,6 @@
                 const newInput = document.getElementById('max-speed-input-' + id);
                 if (newInput) newInput.addEventListener('input', () => { userEdited[id] = newInput.value; });
             } else {
-                // Existing engine — update cells in place
                 updateRow(id, e);
             }
         });
@@ -703,7 +741,7 @@
         updateTime.textContent = 'updated ' + new Date().toLocaleTimeString();
     }
 
-    // Update cmd colors and boost badge every second
+    // Update cmd colors and boost/estop badges every second
     setInterval(() => {
         Object.keys(engines).forEach(id => {
             const e = engines[id];
@@ -716,6 +754,10 @@
             const boostActive = boostTimers[id] && (Date.now() - boostTimers[id]) < 5000;
             const boostBadge = row.querySelector('.boost-badge');
             if (boostBadge) boostBadge.className = 'boost-badge' + (boostActive ? ' boost-active' : '');
+
+            const estopActive = estopFlags[id] && (e.highball_count || 0) > 3;
+            const estopBadge = row.querySelector('.estop-badge');
+            if (estopBadge) estopBadge.className = 'estop-badge' + (estopActive ? ' estop-active' : '');
 
             const commentCell = row.querySelector('.comment');
             if (commentCell) commentCell.textContent = boostActive ? 'boostActive' : (e.line_comment || '');
