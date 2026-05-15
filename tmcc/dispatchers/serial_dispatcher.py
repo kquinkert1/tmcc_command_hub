@@ -70,7 +70,7 @@ class SerialDispatcher(Dispatcher):
         for engine_id_str in config['EngineMaxSpeeds']:
             engine_id = int(engine_id_str)
             log.info(f"Initializing engine {engine_id}: direction=FORWARD, speed=0")
-            fwd_packet = EngineCommand.build_command(engine_id, EngineCommand.FORWARD_DIRECTION)
+            fwd_packet = EngineCommand.build_command(engine_id, EngineCommand.FORWARD)
             self.send(fwd_packet, priority=True)
             log.debug(f"Engine {engine_id}: sent FORWARD_DIRECTION")
             time.sleep(0.25)
