@@ -31,10 +31,11 @@ class SerialAdaptor(Adaptor):
     CONFIG_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'tmcc.ini')
     CONFIG_SECTION_DEFAULT = 'SerialAdaptor'
 
-    def __init__(self, port: str = None):
+    def __init__(self, port: str = None, yop_enabled: bool = True):
         self._port_name = port or self._load_port()
         self._port = None
         self._running = False
+        self._yop_enabled = yop_enabled
         self._last_send = 0
         self._last_receive = 0
         self._priority_queue = Queue()
@@ -126,7 +127,7 @@ class SerialAdaptor(Adaptor):
     def _yop_loop(self):
         while self._running:
             time.sleep(0.5)
-            if time.time() - self._last_send >= YOP_INTERVAL:
+            if self._yop_enabled and time.time() - self._last_send >= YOP_INTERVAL:
                 self._priority_queue.put(EngineCommand.yop())
 
     def read(self) -> tuple:

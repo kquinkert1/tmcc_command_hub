@@ -25,10 +25,11 @@ CONFIG_KEY = 'log_filename'
 
 class SerialDispatcher(Dispatcher):
 
-    def __init__(self, port: str = None, verbose: bool = False):
+    def __init__(self, port: str = None, verbose: bool = False, yop_enabled: bool = True):
         super().__init__()
         self._port = port
         self._verbose = verbose
+        self._yop_enabled = yop_enabled
         self._log_filename = self._load_log_filename()
         self._log_file = None
         self._adaptor = self.create_adaptor()
@@ -53,7 +54,7 @@ class SerialDispatcher(Dispatcher):
         return filename
 
     def create_adaptor(self):
-        return SerialAdaptor(port=self._port)
+        return SerialAdaptor(port=self._port, yop_enabled=self._yop_enabled)
 
     def read(self) -> tuple:
         return self._adaptor.read()
@@ -79,7 +80,6 @@ class SerialDispatcher(Dispatcher):
             aux1_packet = EngineCommand.build_command(engine_id, EngineCommand.ACTION, EngineCommand.AUX1_OPTION_1)
             self.send(aux1_packet, priority=True)
             log.debug(f"Engine {engine_id}: sent AUX1_OPTION_1")
-
             numeric_packet = EngineCommand.build_command(engine_id, EngineCommand.ACTION, EngineCommand.NUMERIC_BASE | 7)
             self.send(numeric_packet, priority=True)
             log.debug(f"Engine {engine_id}: sent NUMERIC 7")
@@ -138,6 +138,7 @@ class SerialDispatcher(Dispatcher):
             'direction': engine.direction,
             'bell': engine.bell,
             'last_command': engine.last_command or '',
+            'command': engine.command,
             'line_comment': engine.line_comment,
             'command_timestamp': engine.command_timestamp.strftime('%H:%M:%S.%f')[:11],
             'message_timestamp': datetime.now().strftime('%H:%M:%S.%f')[:11]
@@ -173,9 +174,10 @@ class SerialDispatcher(Dispatcher):
                             self.publish(self._engines[address])
                         self._dirty.clear()
 
-                        # Publish all engines every 5 seconds
+                        # Publish all engines every 5 seconds, clear command first
                         if now - last_publish >= PUBLISH_INTERVAL:
                             for engine in self._engines.values():
+                                engine.clear_command()
                                 log.debug(f"publish interval: {engine}")
                                 self.publish(engine)
                             last_publish = now
@@ -192,6 +194,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Dispatch TMCC packets from serial port.')
     parser.add_argument('-p', '--port', help='Serial port (e.g. /dev/ttyS0)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+    parser.add_argument('--no-yop', action='store_true', help='Disable YOP keepalive')
     parser.add_argument('--list-ports', action='store_true', help='List available serial ports and exit')
     args = parser.parse_args()
 
@@ -205,5 +208,5 @@ if __name__ == '__main__':
             print("No serial ports found.")
         exit(0)
 
-    dispatcher = SerialDispatcher(port=args.port, verbose=args.verbose)
+    dispatcher = SerialDispatcher(port=args.port, verbose=args.verbose, yop_enabled=not args.no_yop)
     dispatcher.run()
