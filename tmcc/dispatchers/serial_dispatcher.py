@@ -61,6 +61,24 @@ class SerialDispatcher(Dispatcher):
     def send(self, packet: bytes, priority: bool = False):
         self._adaptor.send(packet, priority=priority)
 
+    def _initialize_engines(self):
+        config = configparser.RawConfigParser()
+        config.read(os.path.abspath(CONFIG_FILE))
+        if 'EngineMaxSpeeds' not in config:
+            log.warning("No [EngineMaxSpeeds] section found in ini")
+            return
+        for engine_id_str in config['EngineMaxSpeeds']:
+            engine_id = int(engine_id_str)
+            log.info(f"Initializing engine {engine_id}: direction=FORWARD, speed=0")
+            fwd_packet = EngineCommand.build_command(engine_id, EngineCommand.FORWARD_DIRECTION)
+            self.send(fwd_packet, priority=True)
+            log.debug(f"Engine {engine_id}: sent FORWARD_DIRECTION")
+            time.sleep(0.25)
+            stop_packet = EngineCommand.build_command(engine_id, EngineCommand.ABSOLUTE_SPEED, 0)
+            self.send(stop_packet, priority=True)
+            log.debug(f"Engine {engine_id}: sent ABSOLUTE_SPEED=0")
+            time.sleep(0.25)
+
     def _on_send_command(self, client, userdata, message):
         try:
             payload = json.loads(message.payload)
@@ -91,7 +109,6 @@ class SerialDispatcher(Dispatcher):
 
         except Exception as e:
             log.error(f"Error processing send command: {e}")
-
 
     def _get_or_create_engine(self, address: int) -> Engine:
         if address not in self._engines:
@@ -132,6 +149,7 @@ class SerialDispatcher(Dispatcher):
         try:
             with open(self._log_filename, 'a') as self._log_file:
                 with self._adaptor:
+                    self._initialize_engines()
                     while True:
                         packet, comment = self.read()
                         now = time.time()
