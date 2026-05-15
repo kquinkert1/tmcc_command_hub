@@ -169,6 +169,25 @@
         .dir-forward { background: rgba(26,138,74,0.1); color: var(--green); border: 1px solid rgba(26,138,74,0.3); }
         .dir-reverse { background: rgba(204,34,0,0.1); color: var(--red); border: 1px solid rgba(204,34,0,0.3); }
 
+        .boost-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            border-radius: 2px;
+            font-family: var(--head);
+            background: rgba(180,180,180,0.15);
+            color: #999999;
+            border: 1px solid rgba(180,180,180,0.4);
+            margin-left: 8px;
+        }
+
+        .boost-badge.boost-active {
+            background: rgba(204,34,0,0.1);
+            color: var(--red);
+            border: 1px solid rgba(204,34,0,0.3);
+        }
+
         .bell-on { color: var(--accent); }
         .bell-off { color: var(--text-dim); }
 
@@ -421,9 +440,8 @@
     }
 
     const engines = {};
-
-    // Track user-edited state per engine outside of DOM
     const userEdited = {};
+    const boostTimers = {};
 
     function getCmdColor(cmdTimestamp) {
         if (!cmdTimestamp) return '#bbbbbb';
@@ -479,7 +497,7 @@
     }
 
     function renderEngines() {
-        const ids = Object.keys(engines).sort((a, b) => a - b);
+        const ids = Object.keys(engines).sort((a, b) => Number(a) - Number(b));
         if (ids.length === 0) {
             table.style.display = 'none';
             emptyState.style.display = 'block';
@@ -499,6 +517,12 @@
             const bellLabel = e.bell ? '🔔 ON' : 'OFF';
             const cmdColor = getCmdColor(e.command_timestamp);
 
+            // Track boost timer using command (nulled after publish interval)
+            if (e.command && e.command.trim().includes('Boost')) {
+                boostTimers[id] = Date.now();
+            }
+            const boostActive = boostTimers[id] && (Date.now() - boostTimers[id]) < 5000;
+
             // Determine input value before rebuilding DOM
             let inputVal;
             if (userEdited[id]) {
@@ -517,7 +541,10 @@
             }
 
             row.innerHTML = `
-                <td><span class="engine-id">${id}</span></td>
+                <td>
+                    <span class="engine-id">${id}</span>
+                    <span class="boost-badge ${boostActive ? 'boost-active' : ''}">BOOST</span>
+                </td>
                 <td>
                     <div class="speed-bar-wrap">
                         <span class="speed-val">${e.speed}</span>
@@ -537,7 +564,7 @@
                 <td><span class="dir-badge ${dirClass}">${e.direction}</span></td>
                 <td><span class="${bellClass}">${bellLabel}</span></td>
                 <td><span class="last-cmd" style="color:${cmdColor}">${e.last_command || ''}</span></td>
-                <td><span class="comment">${e.line_comment || ''}</span></td>
+                <td><span class="comment">${boostActive ? 'boostActive' : (e.line_comment || '')}</span></td>
                 <td><span class="ts">${e.command_timestamp || ''}</span></td>
                 <td><span class="ts">${e.message_timestamp || ''}</span></td>
             `;
@@ -556,11 +583,25 @@
         updateTime.textContent = 'updated ' + new Date().toLocaleTimeString();
     }
 
+    // Update cmd colors and boost badge every second
     setInterval(() => {
         Object.keys(engines).forEach(id => {
             const e = engines[id];
             const span = document.querySelector(`#engine-row-${id} .last-cmd`);
             if (span) span.style.color = getCmdColor(e.command_timestamp);
+
+            // Update boost badge class
+            const boostBadge = document.querySelector(`#engine-row-${id} .boost-badge`);
+            if (boostBadge) {
+                const boostActive = boostTimers[id] && (Date.now() - boostTimers[id]) < 5000;
+                boostBadge.className = 'boost-badge' + (boostActive ? ' boost-active' : '');
+
+                // Update comment cell
+                const commentCell = document.querySelector(`#engine-row-${id} .comment`);
+                if (commentCell) {
+                    commentCell.textContent = boostActive ? 'boostActive' : (e.line_comment || '');
+                }
+            }
         });
     }, 1000);
 

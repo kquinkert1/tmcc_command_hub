@@ -9,9 +9,8 @@ DIRECTION_ACTIONS = {
     EngineAction.TOGGLE_DIR.value
 }
 
-DEFAULT_MAX_SPEED = 2_000_000
+DEFAULT_MAX_SPEED = None
 DEBOUNCE_INTERVAL = 0.25  # seconds
-
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +28,7 @@ class Engine:
         self.max_speed = DEFAULT_MAX_SPEED
         self.priority = 'normal'
         self.last_command = None
+        self.command = None
         self.line_comment = ''
         self.command_timestamp = datetime.now()
         self._last_direction_time = 0
@@ -56,17 +56,22 @@ class Engine:
             self._handle_bell()
 
         self.last_command = command.description
+        self.command = command.description
         self.line_comment = comment
         self.command_timestamp = datetime.now()
+
+    def clear_command(self):
+        """Null out the current command after publish interval expires."""
+        self.command = None
 
     def _handle_absolute_speed(self, speed_value: int):
         """Set engine to an absolute speed value."""
         log.debug(f"_handle_absolute_speed(speed_value)")
-        self.speed = max(0, min(speed_value, self.max_speed))
+        self.speed = max(0, min(speed_value, self.max_speed)) if self.max_speed is not None else max(0, speed_value)
 
     def _handle_relative_speed(self, speed_value: int):
         """Adjust engine speed relative to current speed."""
-        self.speed = max(0, min(self.speed + speed_value, self.max_speed))
+        self.speed = max(0, min(self.speed + speed_value, self.max_speed)) if self.max_speed is not None else max(0, self.speed + speed_value)
 
     def _handle_direction(self, action: str):
         """Handle direction change with debounce."""
@@ -94,6 +99,7 @@ class Engine:
             f"direction={self.direction}, bell={self.bell}, "
             f"priority={self.priority}, "
             f"last_command={self.last_command}, "
+            f"command={self.command}, "
             f"line_comment={self.line_comment}, "
             f"command_timestamp={self.command_timestamp})"
         )

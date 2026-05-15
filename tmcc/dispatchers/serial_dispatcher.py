@@ -79,7 +79,6 @@ class SerialDispatcher(Dispatcher):
             aux1_packet = EngineCommand.build_command(engine_id, EngineCommand.ACTION, EngineCommand.AUX1_OPTION_1)
             self.send(aux1_packet, priority=True)
             log.debug(f"Engine {engine_id}: sent AUX1_OPTION_1")
-
             numeric_packet = EngineCommand.build_command(engine_id, EngineCommand.ACTION, EngineCommand.NUMERIC_BASE | 7)
             self.send(numeric_packet, priority=True)
             log.debug(f"Engine {engine_id}: sent NUMERIC 7")
@@ -138,6 +137,7 @@ class SerialDispatcher(Dispatcher):
             'direction': engine.direction,
             'bell': engine.bell,
             'last_command': engine.last_command or '',
+            'command': engine.command,
             'line_comment': engine.line_comment,
             'command_timestamp': engine.command_timestamp.strftime('%H:%M:%S.%f')[:11],
             'message_timestamp': datetime.now().strftime('%H:%M:%S.%f')[:11]
@@ -173,9 +173,10 @@ class SerialDispatcher(Dispatcher):
                             self.publish(self._engines[address])
                         self._dirty.clear()
 
-                        # Publish all engines every 5 seconds
+                        # Publish all engines every 5 seconds, clear command first
                         if now - last_publish >= PUBLISH_INTERVAL:
                             for engine in self._engines.values():
+                                engine.clear_command()
                                 log.debug(f"publish interval: {engine}")
                                 self.publish(engine)
                             last_publish = now
