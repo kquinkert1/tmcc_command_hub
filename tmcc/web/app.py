@@ -1,4 +1,6 @@
 import json
+import socket
+import uuid
 import threading
 import time
 import logging
@@ -18,6 +20,18 @@ subscriptions = TMCCSubscriptions()
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'tmcc.ini')
 
 
+def _get_machine_id():
+    hostname = socket.gethostname()
+    mac = ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff) for ele in range(0, 48, 8)][::-1])
+    mac_clean = mac.replace(':', '')
+    return hostname, mac_clean
+
+
+def _get_serial_section():
+    hostname, mac = _get_machine_id()
+    return f"SerialAdaptor_{hostname}_{mac}"
+
+
 def _load_port() -> int:
     config = configparser.RawConfigParser()
     config.read(os.path.abspath(CONFIG_FILE))
@@ -25,7 +39,6 @@ def _load_port() -> int:
 
 
 def run_monitor():
-    """Run SpeedMonitor in a background thread."""
     monitor.monitor_subscriptions()
     while True:
         time.sleep(0.1)
@@ -36,9 +49,50 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/serial/ports')
+def get_serial_ports():
+    import serial.tools.list_ports
+    ports = serial.tools.list_ports.comports()
+    section = _get_serial_section()
+    current_port = None
+    config = configparser.RawConfigParser()
+    config.read(os.path.abspath(CONFIG_FILE))
+    if config.has_option(section, 'port'):
+        current_port = config.get(section, 'port')
+    elif config.has_option('SerialAdaptor', 'port'):
+        current_port = config.get('SerialAdaptor', 'port')
+    hostname, mac = _get_machine_id()
+    return jsonify({
+        'ports': [{'device': p.device, 'description': p.description} for p in ports],
+        'current_port': current_port,
+        'hostname': hostname,
+        'mac': mac,
+        'section': section
+    })
+
+
+@app.route('/serial/port', methods=['POST'])
+def save_serial_port():
+    data = request.get_json()
+    port = data.get('port')
+    if not port:
+        return jsonify({'error': 'port required'}), 400
+
+    section = _get_serial_section()
+    abs_config = os.path.abspath(CONFIG_FILE)
+    config = configparser.RawConfigParser()
+    config.read(abs_config)
+    if not config.has_section(section):
+        config.add_section(section)
+    config.set(section, 'port', port)
+    with open(abs_config, 'w') as f:
+        config.write(f)
+    log.info(f"Saved serial port {port} for {section}")
+    return jsonify({'ok': True, 'port': port, 'section': section})
+
+
 @app.route('/engine/<int:engine_id>/max_speed', methods=['POST'])
 def set_max_speed(engine_id):
-    """Save max speed for an engine to tmcc.ini."""
     data = request.get_json()
     max_speed = data.get('max_speed')
     if max_speed is None:
@@ -64,7 +118,6 @@ def set_max_speed(engine_id):
 
 @app.route('/engine/<int:engine_id>/send_abs_speed', methods=['POST'])
 def send_abs_speed(engine_id):
-    """Publish absolute speed command to tmcc_send/engine/{id}."""
     data = request.get_json()
     speed = data.get('speed')
     if speed is None:
@@ -88,7 +141,6 @@ def send_abs_speed(engine_id):
 
 @app.route('/stream')
 def stream():
-    """SSE endpoint — pushes engine updates to the browser."""
     def event_stream():
         last_seen = {}
         while True:

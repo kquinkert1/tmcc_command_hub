@@ -48,10 +48,7 @@
             text-transform: uppercase;
         }
 
-        .logo span {
-            color: var(--text-dim);
-            font-weight: 300;
-        }
+        .logo span { color: var(--text-dim); font-weight: 300; }
 
         .status-dot {
             width: 8px;
@@ -74,15 +71,10 @@
             50% { opacity: 0.4; }
         }
 
-        .status-label {
-            font-size: 11px;
-            color: var(--text-dim);
-            letter-spacing: 1px;
-        }
+        .status-label { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
 
         .tabs {
             display: flex;
-            gap: 0;
             padding: 0 32px;
             border-bottom: 1px solid var(--border);
             background: var(--panel);
@@ -101,14 +93,9 @@
         }
 
         .tab:hover { color: var(--text); }
-
-        .tab.active {
-            color: var(--accent);
-            border-bottom-color: var(--accent);
-        }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
         .content { padding: 32px; }
-
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
@@ -128,17 +115,9 @@
             color: var(--accent);
         }
 
-        .update-time {
-            font-size: 11px;
-            color: var(--text-dim);
-        }
+        .update-time { font-size: 11px; color: var(--text-dim); }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
         thead tr { border-bottom: 2px solid var(--accent); }
 
         th {
@@ -152,17 +131,9 @@
             text-align: left;
         }
 
-        tbody tr {
-            border-bottom: 1px solid var(--border);
-            transition: background 0.15s;
-        }
-
+        tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
         tbody tr:hover { background: rgba(0,0,0,0.03); }
-
-        td {
-            padding: 12px 16px;
-            vertical-align: middle;
-        }
+        td { padding: 12px 16px; vertical-align: middle; }
 
         .engine-id {
             font-family: var(--head);
@@ -172,17 +143,8 @@
             letter-spacing: 1px;
         }
 
-        .speed-bar-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .speed-val {
-            width: 28px;
-            text-align: right;
-            color: var(--accent2);
-        }
+        .speed-bar-wrap { display: flex; align-items: center; gap: 10px; }
+        .speed-val { width: 28px; text-align: right; color: var(--accent2); }
 
         .speed-bar {
             flex: 1;
@@ -193,11 +155,7 @@
             max-width: 120px;
         }
 
-        .speed-fill {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.4s ease, background 0.4s ease;
-        }
+        .speed-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease, background 0.4s ease; }
 
         .dir-badge {
             display: inline-block;
@@ -208,44 +166,17 @@
             font-family: var(--head);
         }
 
-        .dir-forward {
-            background: rgba(26,138,74,0.1);
-            color: var(--green);
-            border: 1px solid rgba(26,138,74,0.3);
-        }
-
-        .dir-reverse {
-            background: rgba(204,34,0,0.1);
-            color: var(--red);
-            border: 1px solid rgba(204,34,0,0.3);
-        }
+        .dir-forward { background: rgba(26,138,74,0.1); color: var(--green); border: 1px solid rgba(26,138,74,0.3); }
+        .dir-reverse { background: rgba(204,34,0,0.1); color: var(--red); border: 1px solid rgba(204,34,0,0.3); }
 
         .bell-on { color: var(--accent); }
         .bell-off { color: var(--text-dim); }
 
-        .last-cmd {
-            max-width: 220px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .comment {
-            color: var(--text-dim);
-            font-size: 11px;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
+        .last-cmd { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .comment { color: var(--text-dim); font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .ts { color: var(--text-dim); font-size: 11px; }
 
-        .max-speed-wrap {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+        .max-speed-wrap { display: flex; align-items: center; gap: 6px; }
 
         .max-speed-input {
             width: 70px;
@@ -258,10 +189,7 @@
             color: var(--text);
         }
 
-        .max-speed-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
+        .max-speed-input:focus { outline: none; border-color: var(--accent); }
 
         .set-btn {
             padding: 3px 8px;
@@ -294,6 +222,51 @@
 
         .abs-btn:hover { opacity: 0.8; }
         .abs-btn.sent { background: var(--green); }
+
+        /* Serial port tab */
+        .port-list { list-style: none; margin-bottom: 24px; }
+
+        .port-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .port-item:hover { background: rgba(0,0,0,0.03); }
+        .port-item.selected { border-color: var(--accent); background: rgba(196,122,0,0.05); }
+
+        .port-device {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--accent2);
+            min-width: 200px;
+        }
+
+        .port-desc { font-size: 12px; color: var(--text-dim); }
+
+        .save-port-btn {
+            padding: 8px 20px;
+            font-family: var(--head);
+            font-size: 12px;
+            letter-spacing: 2px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .save-port-btn:hover { opacity: 0.8; }
+        .save-port-btn.saved { background: var(--green); }
+
+        .no-ports { color: var(--text-dim); font-size: 13px; padding: 20px 0; }
 
         .empty-state {
             text-align: center;
@@ -331,9 +304,11 @@
 
 <nav class="tabs">
     <div class="tab active" data-tab="speed">Speed Monitor</div>
+    <div class="tab" data-tab="serial">Serial Port</div>
 </nav>
 
 <div class="content">
+    <!-- Speed Monitor Tab -->
     <div class="tab-panel active" id="tab-speed">
         <div class="panel-header">
             <div class="panel-title">Engine Status</div>
@@ -359,15 +334,28 @@
             </table>
         </div>
     </div>
+
+    <!-- Serial Port Tab -->
+    <div class="tab-panel" id="tab-serial">
+        <div class="panel-header">
+            <div class="panel-title">Serial Port</div>
+        </div>
+        <ul class="port-list" id="port-list">
+            <li class="no-ports">Loading ports...</li>
+        </ul>
+        <button class="save-port-btn" id="save-port-btn" onclick="savePort()">SAVE</button>
+    </div>
 </div>
 
 <script>
+    // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             tab.classList.add('active');
             document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            if (tab.dataset.tab === 'serial') loadPorts();
         });
     });
 
@@ -383,18 +371,73 @@
         statusLabel.textContent = ok ? 'LIVE' : 'DISCONNECTED';
     }
 
+    // Serial port
+    let selectedPort = null;
+
+    function loadPorts() {
+        fetch('/serial/ports')
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('port-list');
+                if (data.ports.length === 0) {
+                    list.innerHTML = '<li class="no-ports">No serial ports found.</li>';
+                    return;
+                }
+                list.innerHTML = '';
+                data.ports.forEach(p => {
+                    const li = document.createElement('li');
+                    li.className = 'port-item' + (p.device === data.current_port ? ' selected' : '');
+                    li.dataset.device = p.device;
+                    if (p.device === data.current_port) selectedPort = p.device;
+                    li.innerHTML = `
+                        <input type="radio" name="serial_port" value="${p.device}"
+                               ${p.device === data.current_port ? 'checked' : ''}>
+                        <span class="port-device">${p.device}</span>
+                        <span class="port-desc">${p.description}</span>
+                    `;
+                    li.addEventListener('click', () => {
+                        document.querySelectorAll('.port-item').forEach(i => i.classList.remove('selected'));
+                        li.classList.add('selected');
+                        li.querySelector('input').checked = true;
+                        selectedPort = p.device;
+                    });
+                    list.appendChild(li);
+                });
+            });
+    }
+
+    function savePort() {
+        if (!selectedPort) return;
+        const btn = document.getElementById('save-port-btn');
+        fetch('/serial/port', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ port: selectedPort })
+        }).then(r => r.json()).then(data => {
+            if (data.ok) {
+                btn.textContent = 'SAVED';
+                btn.classList.add('saved');
+                setTimeout(() => {
+                    btn.textContent = 'SAVE';
+                    btn.classList.remove('saved');
+                }, 1500);
+            }
+        });
+    }
+
+    // Engine table
     const engines = {};
 
- function getCmdColor(cmdTimestamp) {
-    if (!cmdTimestamp) return '#bbbbbb';
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    const ageSecs = (now - new Date(`${today}T${cmdTimestamp}`)) / 1000;
-    if (ageSecs <= 3) return '#008B00';
-    if (ageSecs <= 7) return '#cc9900';
-    if (ageSecs <= 15) return '#B80000';
-    return '#bbbbbb';
-}
+    function getCmdColor(cmdTimestamp) {
+        if (!cmdTimestamp) return '#bbbbbb';
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const ageSecs = (now - new Date(`${today}T${cmdTimestamp}`)) / 1000;
+        if (ageSecs <= 3) return '#8B0000';
+        if (ageSecs <= 7) return '#006400';
+        if (ageSecs <= 15) return '#B8860B';
+        return '#bbbbbb';
+    }
 
     function getBarColor(pct) {
         if (pct >= 80) return '#8B0000';
@@ -405,10 +448,7 @@
     function setMaxSpeed(engineId, btn) {
         const input = document.getElementById('max-speed-input-' + engineId);
         const val = parseInt(input.value);
-        if (isNaN(val) || val < 0) {
-            input.style.borderColor = 'var(--red)';
-            return;
-        }
+        if (isNaN(val) || val < 0) { input.style.borderColor = 'var(--red)'; return; }
         input.style.borderColor = '';
         fetch(`/engine/${engineId}/max_speed`, {
             method: 'POST',
@@ -418,10 +458,7 @@
             if (data.ok) {
                 btn.textContent = 'SAVED';
                 btn.classList.add('saved');
-                setTimeout(() => {
-                    btn.textContent = 'SET';
-                    btn.classList.remove('saved');
-                }, 1500);
+                setTimeout(() => { btn.textContent = 'SET'; btn.classList.remove('saved'); }, 1500);
             }
         });
     }
@@ -429,10 +466,7 @@
     function sendAbsSpeed(engineId, btn) {
         const input = document.getElementById('max-speed-input-' + engineId);
         const val = parseInt(input.value);
-        if (isNaN(val) || val < 0) {
-            input.style.borderColor = 'var(--red)';
-            return;
-        }
+        if (isNaN(val) || val < 0) { input.style.borderColor = 'var(--red)'; return; }
         input.style.borderColor = '';
         fetch(`/engine/${engineId}/send_abs_speed`, {
             method: 'POST',
@@ -442,10 +476,7 @@
             if (data.ok) {
                 btn.textContent = 'SENT';
                 btn.classList.add('sent');
-                setTimeout(() => {
-                    btn.textContent = 'ABS SEND';
-                    btn.classList.remove('sent');
-                }, 1500);
+                setTimeout(() => { btn.textContent = 'ABS SEND'; btn.classList.remove('sent'); }, 1500);
             }
         });
     }
@@ -493,8 +524,7 @@
                 <td>
                     <div class="max-speed-wrap">
                         <input class="max-speed-input" id="max-speed-input-${id}"
-                               type="text" value="${inputVal}"
-                               placeholder="unlimited">
+                               type="text" value="${inputVal}" placeholder="unlimited">
                         <button class="set-btn" onclick="setMaxSpeed(${id}, this)">SET</button>
                         <button class="abs-btn" onclick="sendAbsSpeed(${id}, this)">ABS SEND</button>
                     </div>
@@ -515,22 +545,18 @@
         updateTime.textContent = 'updated ' + new Date().toLocaleTimeString();
     }
 
-    // Only update colors — do NOT rebuild rows
+    // Only update colors
     setInterval(() => {
         Object.keys(engines).forEach(id => {
             const e = engines[id];
             const span = document.querySelector(`#engine-row-${id} .last-cmd`);
-            if (span) {
-                span.style.color = getCmdColor(e.command_timestamp);
-            }
+            if (span) span.style.color = getCmdColor(e.command_timestamp);
         });
     }, 1000);
 
     const evtSource = new EventSource('/stream');
-
     evtSource.onopen = () => setConnected(true);
     evtSource.onerror = () => setConnected(false);
-
     evtSource.addEventListener('engine', e => {
         const data = JSON.parse(e.data);
         engines[data.id] = data;

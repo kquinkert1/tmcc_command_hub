@@ -1,6 +1,8 @@
 import configparser
 import logging
 import os
+import socket
+import uuid
 import serial
 import threading
 import time
@@ -10,8 +12,8 @@ from tmcc.commands.engine_command import EngineCommand
 
 log = logging.getLogger(__name__)
 
-YOP_INTERVAL = 3       # seconds
-NORMAL_QUEUE_DELAY = 0.25  # seconds since last receive before sending normal
+YOP_INTERVAL = 3
+NORMAL_QUEUE_DELAY = 0.25
 
 
 class SerialAdaptor(Adaptor):
@@ -27,8 +29,7 @@ class SerialAdaptor(Adaptor):
     PACKET_SIZE = 3
 
     CONFIG_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'tmcc.ini')
-    CONFIG_SECTION = 'SerialAdaptor'
-    CONFIG_KEY = 'port'
+    CONFIG_SECTION_DEFAULT = 'SerialAdaptor'
 
     def __init__(self, port: str = None):
         self._port_name = port or self._load_port()
@@ -45,13 +46,31 @@ class SerialAdaptor(Adaptor):
     def port(self) -> str:
         return self._port_name
 
+    def _get_machine_section(self) -> str:
+        hostname = socket.gethostname()
+        mac = ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff) for ele in range(0, 48, 8)][::-1])
+        mac_clean = mac.replace(':', '')
+        return f"SerialAdaptor_{hostname}_{mac_clean}"
+
     def _load_port(self) -> str:
-        config = configparser.ConfigParser()
+        config = configparser.RawConfigParser()
         abs_config = os.path.abspath(self.CONFIG_FILE)
         config.read(abs_config)
-        port = config[self.CONFIG_SECTION][self.CONFIG_KEY]
-        log.debug(f"Config file: {abs_config}, section: [{self.CONFIG_SECTION}], key: {self.CONFIG_KEY} = {port}")
-        return port
+
+        # Try machine-specific section first
+        section = self._get_machine_section()
+        if config.has_option(section, 'port'):
+            port = config.get(section, 'port')
+            log.debug(f"Config: [{section}] port = {port}")
+            return port
+
+        # Fall back to default section
+        if config.has_option(self.CONFIG_SECTION_DEFAULT, 'port'):
+            port = config.get(self.CONFIG_SECTION_DEFAULT, 'port')
+            log.debug(f"Config: [{self.CONFIG_SECTION_DEFAULT}] port = {port}")
+            return port
+
+        raise ValueError(f"No serial port configured in {abs_config}")
 
     def start(self):
         self._port = serial.Serial(
@@ -84,19 +103,11 @@ class SerialAdaptor(Adaptor):
             log.debug(f"Closed serial port: {self._port_name}")
 
     def _send_loop(self):
-        """
-        Send thread:
-        - Priority queue: always drain first
-        - Normal queue: only send if no packet received in last 0.25 seconds
-        """
         while self._running:
             packet = None
-
-            # Drain priority queue first
             try:
                 packet = self._priority_queue.get_nowait()
             except Empty:
-                # Normal queue only if port has been quiet for 0.25 seconds
                 if time.time() - self._last_receive >= NORMAL_QUEUE_DELAY:
                     try:
                         packet = self._normal_queue.get_nowait()
@@ -113,18 +124,16 @@ class SerialAdaptor(Adaptor):
                 time.sleep(0.01)
 
     def _yop_loop(self):
-        """Send YOP keepalive every 3 seconds since last send."""
         while self._running:
             time.sleep(0.5)
             if time.time() - self._last_send >= YOP_INTERVAL:
                 self._priority_queue.put(EngineCommand.yop())
 
     def read(self) -> tuple:
-        """Blocking read of next 3-byte TMCC packet, returns None on timeout."""
         while self._port and self._port.is_open:
             header = self._port.read(1)
             if not header:
-                return None, ''  # timeout - let dispatcher check interval
+                return None, ''
             if header[0] == self.HEADER:
                 rest = self._port.read(self.PACKET_SIZE - 1)
                 if len(rest) == self.PACKET_SIZE - 1:
@@ -133,7 +142,6 @@ class SerialAdaptor(Adaptor):
         return None, ''
 
     def send(self, packet: bytes, priority: bool = False):
-        """Queue a 3-byte TMCC packet for sending."""
         if len(packet) != self.PACKET_SIZE:
             raise ValueError(f"TMCC packet must be exactly {self.PACKET_SIZE} bytes")
         if priority:
